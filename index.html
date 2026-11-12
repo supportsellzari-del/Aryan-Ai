@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0C0F2E">
+<title>Aryan AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<style>
+/* Palette: nila (indigo dye), haldi (turmeric), chuna (lime wash), mehendi (green) */
+:root{
+  color-scheme:light dark;
+  --haldi:#F4B42A;
+  --bg:#F1F0F9; --surface:#FFFFFF; --ink:#14173F; --muted:#5A5E87; --line:#D8D7EB;
+  --mark:#1B1F5E; --focus:#14173F; --ok:#5E8A2F; --bad:#C2413B;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0C0F2E; --surface:#151945; --ink:#ECEBFA; --muted:#9B9EC9; --line:#282D68;
+    --mark:#F4B42A; --focus:#F4B42A; --ok:#8DBB55; --bad:#F0827B;
+  }
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F1F0F9; --surface:#FFFFFF; --ink:#14173F; --muted:#5A5E87; --line:#D8D7EB;
+  --mark:#1B1F5E; --focus:#14173F; --ok:#5E8A2F; --bad:#C2413B;
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0C0F2E; --surface:#151945; --ink:#ECEBFA; --muted:#9B9EC9; --line:#282D68;
+  --mark:#F4B42A; --focus:#F4B42A; --ok:#8DBB55; --bad:#F0827B;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:400 16.5px/1.7 "Hind","Noto Sans Devanagari","Nirmala UI",system-ui,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.app{height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:760px;margin:0 auto}
+
+/* Header */
+.top{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 8px 8px 16px;padding-top:calc(8px + env(safe-area-inset-top));
+  border-bottom:1px solid var(--line);
+}
+.top .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.top .lotus{color:var(--mark);flex:none}
+.word{font:400 23px/1.1 "Tiro Devanagari Hindi",serif}
+.word small{font:600 12px "Hind",sans-serif;letter-spacing:.08em;color:var(--muted);margin-left:6px}
+.status{display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.dot.ok{background:var(--ok)}
+.dot.bad{background:var(--bad)}
+.ib{
+  width:44px;height:44px;border:0;background:none;border-radius:12px;
+  display:grid;place-items:center;cursor:pointer;color:var(--ink);flex:none;
+}
+.ib:hover{background:var(--line)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ib.on{background:var(--haldi);color:#14173F}
+
+/* Lotus mark */
+.lotus{overflow:visible}
+.lotus.draw .p{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s cubic-bezier(.3,.7,.2,1) forwards;animation-delay:calc(var(--i) * 70ms)}
+.lotus.draw .d{opacity:0;animation:pop .4s ease forwards;animation-delay:calc(var(--i) * 70ms)}
+.lotus.think .p{animation:glow 1.4s ease-in-out infinite;animation-delay:calc(var(--i) * 90ms)}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{to{opacity:1}}
+@keyframes glow{0%,100%{opacity:.2}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .lotus.draw .p{animation:none;stroke-dasharray:none;stroke-dashoffset:0}
+  .lotus.draw .d{animation:none;opacity:1}
+  .lotus.think .p{animation:none;opacity:.6}
+}
+
+/* Chat */
+.chat{flex:1;overflow-y:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+.hero{position:relative;overflow:hidden;margin:0 -16px;padding:0 16px}
+.chat.started .hero{display:none}
+.hero-art{width:min(78vw,300px);margin-left:auto;transform:translateX(18%);color:var(--mark)}
+.hero-art svg{width:100%;height:auto;display:block}
+.hero h1{font:400 clamp(52px,15vw,80px)/1.05 "Tiro Devanagari Hindi",serif;margin:2px 0 8px}
+.hero p{margin:0 0 20px;color:var(--muted);max-width:34ch}
+.prompts{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.pr{
+  display:block;width:100%;text-align:left;padding:14px 2px;background:none;border:0;
+  border-bottom:1px solid var(--line);cursor:pointer;transition:padding-left .15s ease,color .15s ease;
+}
+.pr:hover{padding-left:8px}
+
+#msgs{display:flex;flex-direction:column;gap:20px}
+.msg.user{
+  align-self:flex-end;max-width:85%;background:var(--haldi);color:#14173F;
+  padding:9px 15px;border-radius:18px 18px 4px 18px;white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.msg.ai{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start}
+.msg.ai .av{margin-top:5px;color:var(--mark)}
+.msg.ai .body{min-width:0}
+.txt{white-space:pre-wrap;overflow-wrap:anywhere}
+.txt.err{color:var(--bad)}
+.txt code{font:500 .9em ui-monospace,Menlo,Consolas,monospace;background:var(--line);padding:1px 6px;border-radius:6px}
+.txt pre{white-space:pre;overflow-x:auto;margin:8px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;line-height:1.5}
+.txt pre code{background:none;padding:0;font-size:13.5px}
+.acts{display:flex;gap:4px;margin-top:2px}
+.mini{border:0;background:none;color:var(--muted);font-size:13.5px;padding:6px 8px;min-height:36px;border-radius:8px;cursor:pointer}
+.mini:hover{background:var(--line)}
+
+/* Composer */
+.comp{padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+.box{display:flex;align-items:flex-end;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:4px 4px 4px 16px}
+.box:focus-within{border-color:var(--focus)}
+.box textarea{
+  flex:1;border:0;outline:none;background:transparent;resize:none;
+  padding:10px 4px;max-height:140px;line-height:1.5;min-width:0;
+}
+.box textarea::placeholder{color:var(--muted)}
+.send{
+  width:44px;height:44px;border-radius:50%;border:0;background:var(--haldi);color:#14173F;
+  display:grid;place-items:center;cursor:pointer;flex:none;
+}
+.send svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.send:disabled{opacity:.4;cursor:default}
+.foot{margin:8px 0 0;text-align:center;font-size:12.5px;color:var(--muted);line-height:1.4}
+
+/* Settings sheet */
+.wrap{position:fixed;inset:0;display:none;z-index:10}
+.wrap.open{display:flex;align-items:flex-end;justify-content:center}
+.scrim{position:absolute;inset:0;background:rgba(8,10,35,.55)}
+.sheet{
+  position:relative;width:100%;max-width:760px;max-height:90dvh;overflow-y:auto;
+  background:var(--bg);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  animation:up .22s ease;
+}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sheet h2{font:400 24px/1.2 "Tiro Devanagari Hindi",serif;margin:0}
+.fld{display:block;margin:14px 0 0}
+.fld span{display:block;font-weight:500;margin-bottom:4px}
+.fld small{display:block;color:var(--muted);font-size:13.5px;line-height:1.5;margin-top:4px}
+.fld input[type="url"],.fld input[type="text"],.fld textarea{
+  width:100%;padding:12px;font-size:16px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;outline:none;
+}
+.fld input:focus,.fld textarea:focus{border-color:var(--focus)}
+.chk{display:flex;align-items:center;gap:10px;margin:16px 0 0;min-height:44px}
+.chk input{width:20px;height:20px;accent-color:var(--haldi)}
+.save{
+  width:100%;margin-top:18px;min-height:48px;border:0;border-radius:14px;
+  background:var(--haldi);color:#14173F;font-weight:600;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span id="brandMark"></span>
+      <div style="min-width:0">
+        <div class="word">आर्यन<small>AI</small></div>
+        <div class="status"><span class="dot" id="dot"></span><span id="statusTxt">Demo mode, server nahi juda</span></div>
+      </div>
+    </div>
+    <button class="ib" id="newChat" aria-label="Nayi chat"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="ib" id="theme" aria-label="Dark ya light mode"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+    <button class="ib" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+  </header>
+
+  <main class="chat" id="chat" aria-live="polite">
+    <section class="hero" id="hero">
+      <div class="hero-art" id="heroArt"></div>
+      <h1>नमस्ते</h1>
+      <p>Main Aryan hu. Hindi, Hinglish ya English me kuch bhi poochho.</p>
+      <ul class="prompts" id="prompts"></ul>
+    </section>
+    <div id="msgs"></div>
+  </main>
+
+  <footer class="comp">
+    <div class="box">
+      <textarea id="ta" rows="1" placeholder="Yahan likho ya mic dabao" aria-label="Message likho"></textarea>
+      <button class="ib" id="mic" aria-label="Bolkar likho" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="send" id="send" aria-label="Bhejo" disabled></button>
+    </div>
+    <p class="foot">Made in India 🇮🇳. Zaroori jawab dobara check kar lo.</p>
+  </footer>
+</div>
+
+<div class="wrap" id="wrap">
+  <div class="scrim" id="scrim"></div>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT">
+    <div class="sheet-head">
+      <h2 id="shT">Settings</h2>
+      <button class="ib" id="shClose" aria-label="Band karo"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <label class="fld"><span>Server URL</span>
+      <input type="url" id="fUrl" inputmode="url" autocapitalize="off" autocomplete="off" placeholder="http://192.168.1.5:11434">
+      <small>Khali chhodo to demo mode chalega. Ollama, llama.cpp ya LM Studio ka address daalo.</small>
+    </label>
+    <label class="fld"><span>Model ka naam</span>
+      <input type="text" id="fModel" autocapitalize="off" autocomplete="off" placeholder="qwen2.5:1.5b">
+    </label>
+    <label class="fld"><span>Aryan ko kaam batao</span>
+      <textarea id="fSys" rows="4"></textarea>
+    </label>
+    <label class="chk"><input type="checkbox" id="fSpeak"><span>Jawab bolkar sunao</span></label>
+    <button class="save" id="save">Save karo</button>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const state = {
+  messages: [],
+  busy: false,
+  ctrl: null,
+  cfg: {
+    url: '',
+    model: '',
+    system: 'Tum Aryan AI ho, ek Indian AI assistant. User jis bhasha me likhe (Hindi, Hinglish ya English), usi me saaf aur chhota jawab do.',
+    speak: false
+  }
+};
+
+// Optional: open page as ?api=http://192.168.1.5:11434&model=qwen2.5:1.5b to preset the server
+try {
+  const q = new URLSearchParams(location.search);
+  if (q.get('api')) state.cfg.url = q.get('api');
+  if (q.get('model')) state.cfg.model = q.get('model');
+} catch (e) {}
+
+/* ---------- Lotus mark ---------- */
+function lotus(size, cls) {
+  let big = '', small = '', dots = '';
+  for (let i = 0; i < 8; i++) {
+    big += `<path class="p" style="--i:${i}" pathLength="1" transform="rotate(${i * 45} 50 50)" d="M50 50C38 36 38 16 50 6C62 16 62 36 50 50Z"/>`;
+    small += `<path class="p" style="--i:${i + 8}" pathLength="1" transform="rotate(${22.5 + i * 45} 50 50)" d="M50 50C44 42 44 30 50 24C56 30 56 42 50 50Z"/>`;
+    const a = (22.5 + i * 45) * Math.PI / 180;
+    dots += `<circle class="d" style="--i:${i + 16}" cx="${(50 + 47 * Math.sin(a)).toFixed(2)}" cy="${(50 - 47 * Math.cos(a)).toFixed(2)}" r="1.6" fill="currentColor" stroke="none"/>`;
+  }
+  return `<svg class="lotus ${cls || ''}" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">${big}${small}${dots}<circle cx="50" cy="50" r="3.2" fill="var(--haldi)" stroke="none"/></svg>`;
+}
+function drawHero() { $('#heroArt').innerHTML = lotus(300, 'draw'); }
+$('#brandMark').innerHTML = lotus(34, '');
+drawHero();
+
+/* ---------- Prompts ---------- */
+const PROMPTS = [
+  'Ek chhoti kahani sunao, Indian gaon ki',
+  'Kal ke liye study plan banao',
+  'Boss ko chhutti ka email Hindi me likho',
+  'Python ka for loop simple tarike se samjhao'
+];
+$('#prompts').innerHTML = PROMPTS.map(p => `<li><button class="pr">${p}</button></li>`).join('');
+document.querySelectorAll('.pr').forEach(b => b.addEventListener('click', () => send(b.textContent)));
+
+/* ---------- Rendering ---------- */
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function render(t) {
+  return t.split('```').map((p, i) => {
+    if (i % 2) {
+      const code = p.replace(/^[^\n]*\n/, '').replace(/\n$/, '');
+      return `<pre><code>${esc(code)}</code></pre>`;
+    }
+    let h = esc(p.replace(/^\n+|\n+$/g, ''));
+    h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    return h;
+  }).join('');
+}
+const chat = $('#chat');
+const toBottom = () => { chat.scrollTop = chat.scrollHeight; };
+
+function addUser(text) {
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.textContent = text;
+  $('#msgs').appendChild(el);
+  toBottom();
+}
+function addAI() {
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  el.innerHTML = `<span class="av">${lotus(26, 'think')}</span><div class="body"><div class="txt"></div><div class="acts"></div></div>`;
+  $('#msgs').appendChild(el);
+  toBottom();
+  return { el, av: el.querySelector('.av'), txt: el.querySelector('.txt'), acts: el.querySelector('.acts') };
+}
+
+/* ---------- Status ---------- */
+function setStatus(kind, text) {
+  const dot = $('#dot');
+  dot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'bad' ? ' bad' : '');
+  $('#statusTxt').textContent = text;
+}
+
+/* ---------- Model streams ---------- */
+async function* streamServer() {
+  const base = state.cfg.url.replace(/\/+$/, '');
+  const msgs = [];
+  if (state.cfg.system.trim()) msgs.push({ role: 'system', content: state.cfg.system.trim() });
+  msgs.push(...state.messages);
+  const r = await fetch(base + '/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: state.ctrl.signal,
+    body: JSON.stringify({ model: state.cfg.model || 'default', messages: msgs, stream: true })
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  setStatus('ok', state.cfg.model ? 'Juda hai: ' + state.cfg.model : 'Server juda hai');
+  const rd = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, i).trim();
+      buf = buf.slice(i + 1);
+      if (!line.startsWith('data:')) continue;
+      const d = line.slice(5).trim();
+      if (d === '[DONE]') return;
+      try {
+        const c = JSON.parse(d).choices?.[0]?.delta?.content;
+        if (c) yield c;
+      } catch (e) {}
+    }
+  }
+}
+
+async function* streamDemo(q) {
+  const t = `Abhi demo mode chal raha hai, isliye ye asli AI jawab nahi hai.\n\nUpar settings me apne model ka server URL daalo (Ollama ya llama.cpp), fir Aryan AI aapke apne model se jawab dega.\n\nAapne likha: ${q}`;
+  for (const ch of t.match(/[\s\S]{1,3}/g)) {
+    if (state.ctrl.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+    await sleep(18);
+    yield ch;
+  }
+}
+
+/* ---------- Send ---------- */
+const SEND_ICON = '<svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>';
+const STOP_ICON = '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>';
+const ta = $('#ta'), sendBtn = $('#send');
+sendBtn.innerHTML = SEND_ICON;
+
+function setBusy(b) {
+  state.busy = b;
+  sendBtn.innerHTML = b ? STOP_ICON : SEND_ICON;
+  sendBtn.setAttribute('aria-label', b ? 'Rok do' : 'Bhejo');
+  syncSend();
+}
+function syncSend() { sendBtn.disabled = !state.busy && !ta.value.trim(); }
+
+async function send(text) {
+  text = (text || '').trim();
+  if (!text || state.busy) return;
+  stopSpeak();
+  chat.classList.add('started');
+  addUser(text);
+  state.messages.push({ role: 'user', content: text });
+  const ai = addAI();
+  setBusy(true);
+  state.ctrl = new AbortController();
+  let out = '', first = true, failed = false;
+  try {
+    const gen = state.cfg.url ? streamServer() : streamDemo(text);
+    for await (const chunk of gen) {
+      if (first) { ai.av.firstElementChild.classList.remove('think'); first = false; }
+      out += chunk;
+      ai.txt.innerHTML = render(out);
+      toBottom();
+    }
+    if (!out) { out = 'Khali jawab aaya. Model ka naam aur server check karo.'; ai.txt.textContent = out; failed = true; }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      failed = true;
+      const net = e instanceof TypeError;
+      ai.txt.classList.add('err');
+      ai.txt.textContent = net
+        ? 'Server se connect nahi hua. URL check karo. Ollama ke liye OLLAMA_ORIGINS=* set karna padta hai.'
+        : 'Server ne error diya (' + e.message + '). Model ka naam check karo.';
+      setStatus('bad', 'Server se connect nahi hua');
+    }
+  }
+  ai.av.firstElementChild.classList.remove('think');
+  if (failed && !out) {
+    state.messages.pop();
+  } else if (out && !failed) {
+    state.messages.push({ role: 'assistant', content: out });
+    const cp = document.createElement('button');
+    cp.className = 'mini';
+    cp.textContent = 'Copy karo';
+    cp.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(out); cp.textContent = 'Copy ho gaya'; } catch (e) { cp.textContent = 'Copy nahi hua'; }
+    });
+    ai.acts.appendChild(cp);
+    speak(out);
+  }
+  setBusy(false);
+  toBottom();
+}
+
+sendBtn.addEventListener('click', () => {
+  if (state.busy) { state.ctrl && state.ctrl.abort(); return; }
+  const t = ta.value;
+  ta.value = ''; grow(); syncSend();
+  send(t);
+});
+function grow() { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px'; }
+ta.addEventListener('input', () => { grow(); syncSend(); });
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches) {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+/* ---------- Voice ---------- */
+function speak(t) {
+  if (!state.cfg.speak || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(t.replace(/```[\s\S]*?```/g, ' ').replace(/[`*]/g, ''));
+  u.lang = 'hi-IN';
+  speechSynthesis.speak(u);
+}
+function stopSpeak() { if (window.speechSynthesis) speechSynthesis.cancel(); }
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = $('#mic');
+if (!SR) {
+  mic.hidden = true;
+} else {
+  const rec = new SR();
+  rec.lang = 'hi-IN';
+  rec.interimResults = true;
+  rec.continuous = false;
+  const setOn = on => { mic.classList.toggle('on', on); mic.setAttribute('aria-pressed', on); mic.dataset.on = on ? '1' : ''; };
+  rec.onresult = e => {
+    let t = '';
+    for (const r of e.results) t += r[0].transcript;
+    ta.value = t; grow(); syncSend();
+  };
+  rec.onend = () => setOn(false);
+  rec.onerror = () => setOn(false);
+  mic.addEventListener('click', () => {
+    if (mic.dataset.on) { rec.stop(); return; }
+    stopSpeak();
+    try { rec.start(); setOn(true); } catch (e) { setOn(false); }
+  });
+}
+
+/* ---------- Header actions ---------- */
+$('#newChat').addEventListener('click', () => {
+  if (state.busy && state.ctrl) state.ctrl.abort();
+  stopSpeak();
+  state.messages = [];
+  $('#msgs').innerHTML = '';
+  chat.classList.remove('started');
+  drawHero();
+  chat.scrollTop = 0;
+});
+$('#theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  const cur = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  root.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+});
+
+/* ---------- Settings sheet ---------- */
+const wrap = $('#wrap');
+function openSheet() {
+  $('#fUrl').value = state.cfg.url;
+  $('#fModel').value = state.cfg.model;
+  $('#fSys').value = state.cfg.system;
+  $('#fSpeak').checked = state.cfg.speak;
+  wrap.classList.add('open');
+  $('#fUrl').focus();
+}
+function closeSheet() { wrap.classList.remove('open'); }
+$('#gear').addEventListener('click', openSheet);
+$('#shClose').addEventListener('click', closeSheet);
+$('#scrim').addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+$('#save').addEventListener('click', () => {
+  state.cfg.url = $('#fUrl').value.trim();
+  state.cfg.model = $('#fModel').value.trim();
+  state.cfg.system = $('#fSys').value;
+  state.cfg.speak = $('#fSpeak').checked;
+  if (!state.cfg.speak) stopSpeak();
+  refreshStatus();
+  closeSheet();
+});
+function refreshStatus() {
+  if (!state.cfg.url) { setStatus('demo', 'Demo mode, server nahi juda'); return; }
+  let host = state.cfg.url;
+  try { host = new URL(state.cfg.url).host; } catch (e) {}
+  setStatus('demo', 'Server set hai: ' + host);
+}
+refreshStatus();
+</script>
+</body>
+</html>
