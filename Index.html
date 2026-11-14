@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
 
+<title>AI</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    color: #222;
+}
+
+header {
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #eee;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+#chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.message {
+    max-width: 85%;
+    padding: 12px 15px;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.user {
+    align-self: flex-end;
+    background: #e9efff;
+    border-bottom-right-radius: 4px;
+}
+
+.ai {
+    align-self: flex-start;
+    background: #f4f4f4;
+    border-bottom-left-radius: 4px;
+}
+
+.welcome {
+    margin: auto;
+    text-align: center;
+    color: #777;
+    font-size: 17px;
+}
+
+footer {
+    padding: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid #eee;
+}
+
+.input-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #ddd;
+    border-radius: 28px;
+    padding: 6px 7px 6px 16px;
+    background: white;
+}
+
+input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    min-width: 0;
+    background: transparent;
+}
+
+button {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    font-size: 21px;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.5;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>AI</header>
+
+<main id="chat">
+    <div class="welcome" id="welcome">
+        Hello! 👋<br>
+        How can I help you?
+    </div>
+</main>
+
+<footer>
+    <div class="input-box">
+        <input
+            type="text"
+            id="message"
+            placeholder="Message AI..."
+            autocomplete="off"
+        >
+        <button id="send" onclick="sendMessage()">➤</button>
+    </div>
+</footer>
+
+<script>
+
+const API_URL = "https://aryan-ai-backend-v2.vercel.app/api/chat";
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("message");
+const sendBtn = document.getElementById("send");
+
+let messages = [];
+let isLoading = false;
+
+function addMessage(text, type) {
+    document.getElementById("welcome")?.remove();
+
+    const div = document.createElement("div");
+    div.className = "message " + type;
+    div.textContent = text;
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+
+    return div;
+}
+
+async function sendMessage() {
+
+    const message = input.value.trim();
+
+    if (!message || isLoading) return;
+
+    isLoading = true;
+    sendBtn.disabled = true;
+
+    addMessage(message, "user");
+    input.value = "";
+
+    const loading = addMessage("Thinking...", "ai");
+
+    try {
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: message,
+                messages: messages,
+                character: "assistant",
+                language: "English"
+            })
+        });
+
+        const data = await response.json();
+
+        loading.remove();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Something went wrong");
+        }
+
+        const reply = data.reply || "No response received.";
+
+        addMessage(reply, "ai");
+
+        messages.push(
+            { role: "user", content: message },
+            { role: "assistant", content: reply }
+        );
+
+    } catch (error) {
+
+        loading.textContent = "Error: " + error.message;
+
+    } finally {
+
+        isLoading = false;
+        sendBtn.disabled = false;
+        input.focus();
+
+    }
+}
+
+input.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+});
+
+</script>
+
+</body>
+</html>
