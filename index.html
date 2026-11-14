@@ -52,6 +52,17 @@ header {
     overflow-wrap: anywhere;
 }
 
+.message a {
+    color: #2563eb;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.message a:hover {
+    color: #1d4ed8;
+}
+
 .user {
     align-self: flex-end;
     background: #e9efff;
@@ -148,18 +159,112 @@ const sendBtn = document.getElementById("send");
 let messages = [];
 let isLoading = false;
 
+
+/* Safe URL validation */
+
+function getSafeUrl(rawUrl) {
+    try {
+        const url = new URL(rawUrl);
+
+        if (
+            url.protocol !== "https:" &&
+            url.protocol !== "http:"
+        ) {
+            return null;
+        }
+
+        if (!url.hostname || !url.hostname.includes(".")) {
+            return null;
+        }
+
+        if (url.username || url.password) {
+            return null;
+        }
+
+        return url.href;
+
+    } catch {
+        return null;
+    }
+}
+
+
+/* Render clickable Markdown links safely */
+
+function renderMessage(element, text) {
+
+    const content = String(text || "");
+
+    const linkPattern = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkPattern.exec(content)) !== null) {
+
+        // Normal text before link
+        element.appendChild(
+            document.createTextNode(
+                content.slice(lastIndex, match.index)
+            )
+        );
+
+        const title = match[1];
+        const safeUrl = getSafeUrl(match[2]);
+
+        if (safeUrl) {
+
+            const link = document.createElement("a");
+
+            link.textContent = title;
+            link.href = safeUrl;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+
+            element.appendChild(link);
+
+        } else {
+
+            element.appendChild(
+                document.createTextNode(match[0])
+            );
+        }
+
+        lastIndex = linkPattern.lastIndex;
+    }
+
+    // Remaining normal text
+    element.appendChild(
+        document.createTextNode(content.slice(lastIndex))
+    );
+}
+
+
+/* Add chat message */
+
 function addMessage(text, type) {
+
     document.getElementById("welcome")?.remove();
 
     const div = document.createElement("div");
+
     div.className = "message " + type;
-    div.textContent = text;
+
+    if (type === "ai") {
+        renderMessage(div, text);
+    } else {
+        div.textContent = text;
+    }
 
     chat.appendChild(div);
+
     chat.scrollTop = chat.scrollHeight;
 
     return div;
 }
+
+
+/* Send message to backend */
 
 async function sendMessage() {
 
@@ -171,6 +276,7 @@ async function sendMessage() {
     sendBtn.disabled = true;
 
     addMessage(message, "user");
+
     input.value = "";
 
     const loading = addMessage("Thinking...", "ai");
@@ -178,15 +284,23 @@ async function sendMessage() {
     try {
 
         const response = await fetch(API_URL, {
+
             method: "POST",
+
             headers: {
                 "Content-Type": "application/json"
             },
+
             body: JSON.stringify({
+
                 message: message,
+
                 messages: messages,
+
                 character: "assistant",
+
                 language: "English"
+
             })
         });
 
@@ -195,7 +309,9 @@ async function sendMessage() {
         loading.remove();
 
         if (!response.ok || !data.success) {
-            throw new Error(data.error || "Something went wrong");
+            throw new Error(
+                data.error || "Something went wrong"
+            );
         }
 
         const reply = data.reply || "No response received.";
@@ -203,8 +319,14 @@ async function sendMessage() {
         addMessage(reply, "ai");
 
         messages.push(
-            { role: "user", content: message },
-            { role: "assistant", content: reply }
+            {
+                role: "user",
+                content: message
+            },
+            {
+                role: "assistant",
+                content: reply
+            }
         );
 
     } catch (error) {
@@ -214,16 +336,23 @@ async function sendMessage() {
     } finally {
 
         isLoading = false;
+
         sendBtn.disabled = false;
+
         input.focus();
 
     }
 }
 
+
+/* Enter key support */
+
 input.addEventListener("keydown", function(event) {
+
     if (event.key === "Enter") {
         sendMessage();
     }
+
 });
 
 </script>
