@@ -2,360 +2,729 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#ffffff">
-
-<title>AI</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>J.A.R.V.I.S v2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root{
+  --bg:#000; --panel:#03161a; --line:#0b5560;
+  --cyan:#00e5d4; --blue:#1f8bff; --gold:#e8c13a;
+  --text:#bff8f2; --dim:#5a9aa0; --warn:#ff9f43; --err:#ff6b6b;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
+  --rs:clamp(96px,22dvh,230px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:15px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+#app{
+  height:100dvh;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:8px;
+  padding:calc(8px + var(--safe-t)) calc(10px + var(--safe-r)) calc(8px + var(--safe-b)) calc(10px + var(--safe-l));
+  background:
+    radial-gradient(90% 55% at 50% 40%,rgba(0,110,150,.22),transparent 70%),
+    repeating-linear-gradient(0deg,rgba(0,229,212,.025) 0 1px,transparent 1px 4px);
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background: #ffffff;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    color: #222;
-}
+/* header */
+.top{display:flex;align-items:center;gap:6px;flex:none}
+.cmdbox{flex:1;min-width:0;display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 5px 0 12px;height:42px}
+.cmdbox input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px}
+.cmdbox input::placeholder{color:var(--dim)}
+.ibtn{width:34px;height:34px;flex:none;border-radius:9px;border:1px solid var(--line);background:rgba(0,229,212,.08);color:var(--cyan);display:grid;place-items:center;font-family:'Orbitron';font-size:11px}
+.ibtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ibtn:disabled{opacity:.4}
+.ibtn.off{color:var(--dim);background:transparent}
+.hbtn{height:42px;min-width:42px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--cyan);font-family:'Orbitron';font-size:12px;padding:0 8px}
+.ver{font-family:'Share Tech Mono';font-size:11px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--cyan);background:var(--panel)}
 
-header {
-    height: 58px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-bottom: 1px solid #eee;
-    font-size: 21px;
-    font-weight: 700;
+/* main grid — portrait default */
+main{
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  display:grid;gap:8px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-rows:minmax(150px,1fr) auto auto;
+  grid-template-areas:"core core" "status weather" "batt orbs";
 }
+main::-webkit-scrollbar{display:none}
+.a-core{grid-area:core}.a-status{grid-area:status}.a-weather{grid-area:weather}.a-batt{grid-area:batt}.a-orbs{grid-area:orbs}
 
-#chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+.panel{
+  background:linear-gradient(180deg,rgba(3,28,33,.92),rgba(2,14,18,.92));
+  border:1px solid var(--line);border-radius:14px;padding:9px 10px;min-width:0;
+  box-shadow:inset 0 0 16px rgba(0,229,212,.06),0 0 12px rgba(0,229,212,.06);
 }
+.ptitle{font-family:'Orbitron';font-size:.72rem;letter-spacing:.12em;color:var(--cyan);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.tag{font-family:'Share Tech Mono';font-size:9px;letter-spacing:.06em;padding:1px 6px;border-radius:999px;border:1px solid;white-space:nowrap}
+.tag.live{color:#46f0a0;border-color:#1b7a52;background:rgba(70,240,160,.08)}
+.tag.anim{color:var(--warn);border-color:#8a5a22;background:rgba(255,159,67,.08)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.dot.off{background:var(--err);box-shadow:0 0 8px var(--err)}
 
-.message {
-    max-width: 85%;
-    padding: 12px 15px;
-    border-radius: 16px;
-    font-size: 15px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+/* core */
+.core-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0;height:100%}
+.reactor{position:relative;flex:none;width:var(--rs);height:var(--rs);display:grid;place-items:center;cursor:pointer;margin-top:4px}
+.reactor::before{content:"";position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,rgba(31,139,255,.55),rgba(31,139,255,0) 68%);filter:blur(6px);animation:breathe 4s ease-in-out infinite}
+.ring{position:absolute;border-radius:50%;border:3px solid transparent}
+.r1{inset:0;border-top-color:var(--cyan);border-right-color:var(--cyan);animation:spin 7s linear infinite;box-shadow:0 0 14px rgba(0,229,212,.4)}
+.r2{inset:9%;border:2px solid #0c3550;background:#02060a}
+.r3{inset:17%;border-left-color:var(--cyan);border-bottom-color:var(--cyan);animation:spin 5s linear infinite reverse}
+.r4{inset:25%;border:2px solid #cfd8dc;background:#000}
+.r5{inset:30%;border-top-color:var(--blue);animation:spin 3s linear infinite}
+.core{position:relative;font-family:'Orbitron';font-size:clamp(8px,calc(var(--rs) * .05),13px);letter-spacing:.2em;color:var(--gold);text-shadow:0 0 8px rgba(232,193,58,.6)}
+.reactor.listening::before{animation:pulse .9s ease-in-out infinite;background:radial-gradient(circle,rgba(0,229,212,.75),rgba(0,229,212,0) 68%)}
+.reactor.listening .r1{animation-duration:1.6s}
+.reactor.thinking .r1{animation-duration:1.2s}
+.reactor.thinking .r3{animation-duration:1.4s}
+.reactor.thinking .r5{animation-duration:.8s}
+.reactor.thinking::before{animation:pulse 1.2s ease-in-out infinite;background:radial-gradient(circle,rgba(232,193,58,.5),rgba(31,139,255,0) 68%)}
+.reactor.speaking::before{animation:pulse .7s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{50%{transform:scale(1.07);opacity:.8}}
+@keyframes pulse{50%{transform:scale(1.16)}}
+
+.you{flex:none;width:100%;text-align:center;font-family:'Share Tech Mono';font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px;padding:0 8px}
+.reply{flex:1;min-height:40px;width:100%;overflow-y:auto;overflow-x:hidden;font-family:'Share Tech Mono',monospace;font-size:13px;line-height:1.45;color:var(--text);padding:2px 8px;text-align:center;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.reply.long{text-align:left}
+.reply.error{color:var(--err)}
+.reply.local{color:#9ff5ec}
+#replyText{white-space:pre-wrap;overflow-wrap:anywhere}
+#replyLink{display:none;margin-top:8px}
+#replyLink a{color:var(--gold);font-family:'Orbitron';font-size:11px;letter-spacing:.08em}
+.think{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-family:'Orbitron';font-size:12px;letter-spacing:.14em}
+.think i{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:dots 1.2s infinite ease-in-out}
+.think i:nth-child(2){animation-delay:.2s}.think i:nth-child(3){animation-delay:.4s}
+@keyframes dots{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1.15)}}
+.cur{display:inline-block;width:7px;height:13px;background:var(--cyan);margin-left:3px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.btns{flex:none;display:flex;gap:8px;width:100%}
+.btn{flex:1;height:42px;border-radius:10px;border:1px solid var(--cyan);background:linear-gradient(180deg,rgba(0,229,212,.2),rgba(0,229,212,.05));color:var(--cyan);font-family:'Orbitron';font-size:.7rem;letter-spacing:.1em;box-shadow:0 0 12px rgba(0,229,212,.18),inset 0 0 10px rgba(0,229,212,.12)}
+.btn:active{transform:scale(.97)}
+.btn.live{background:var(--cyan);color:#001a1c}
+.btn:disabled{opacity:.45}
+
+/* bars */
+.bar{margin-bottom:7px}.bar:last-of-type{margin-bottom:0}
+.brow{display:flex;justify-content:space-between;gap:6px;font-size:.95rem;margin-bottom:3px}
+.brow span:last-child{font-family:'Share Tech Mono';font-size:11px;color:var(--dim);text-align:right}
+.track{height:5px;background:#0a2a30;border-radius:4px;overflow:hidden}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:4px;transition:width .6s;box-shadow:0 0 8px var(--cyan)}
+.fill.na{width:0!important}
+canvas#graph{width:100%;height:30px;display:block;margin-top:8px;border-radius:6px;background:linear-gradient(rgba(0,229,212,.08) 1px,transparent 1px) 0 0/100% 10px}
+
+.batt-big{font-family:'Orbitron';font-size:1.5rem;color:#fff;letter-spacing:.04em;line-height:1.1}
+.batt-state{font-size:.8rem;color:var(--cyan);margin-top:2px;font-family:'Share Tech Mono'}
+.bshell{height:18px;border-radius:10px;border:2px solid #9fb4bd;padding:2px;margin-top:7px}
+.bfill{height:100%;width:0;border-radius:7px;background:linear-gradient(180deg,#4aa8ff,#1f6fe0);transition:width .6s}
+.bfill.low{background:linear-gradient(180deg,#ffb066,#e8741a)}
+
+.wrow{display:flex;align-items:center;gap:8px;font-size:.95rem;margin-bottom:5px}
+.wrow:last-of-type{margin-bottom:0}
+.wrow svg{width:16px;height:16px;flex:none;stroke:var(--cyan);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.wplace{font-family:'Share Tech Mono';font-size:10px;color:var(--dim);margin-top:5px}
+
+.orbs{display:flex;justify-content:space-around;align-items:flex-start;gap:8px}
+.orb{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.78rem;text-align:center;color:var(--dim)}
+.globe,.radar{width:100%;max-width:clamp(54px,12dvh,120px);aspect-ratio:1;border-radius:50%;border:1px solid var(--cyan);box-shadow:0 0 14px rgba(0,229,212,.25),inset 0 0 20px rgba(0,229,212,.15)}
+.globe{background:radial-gradient(circle at 35% 35%,#1fd6c6,#0a6a72 55%,#021d22);overflow:hidden;position:relative}
+.globe .land{position:absolute;inset:0;width:200%;height:100%;animation:rot 26s linear infinite}
+.globe::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 70% 70%,rgba(0,0,0,.7),transparent 60%)}
+@keyframes rot{to{transform:translateX(-50%)}}
+canvas.radar{background:#010b0d;display:block}
+
+/* dock */
+.dock{flex:none;display:flex;justify-content:space-around;align-items:center;height:54px;border-radius:999px;border:1px solid var(--line);background:rgba(2,16,20,.92);box-shadow:0 0 18px rgba(0,229,212,.15);max-width:520px;width:100%;margin:0 auto}
+.dock button{width:40px;height:40px;border-radius:50%;border:1px solid #0e4a63;background:rgba(31,139,255,.1);display:grid;place-items:center;color:#4aa8ff}
+.dock button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dock button.on{background:rgba(0,229,212,.25);color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,212,.5)}
+.dock button:active{transform:scale(.92)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.sheet.open{display:flex}
+.card{width:100%;max-width:560px;max-height:82dvh;overflow:auto;background:#031a1f;border:1px solid var(--cyan);border-bottom:0;border-radius:20px 20px 0 0;padding:16px 16px calc(18px + var(--safe-b))}
+.card h3{font-family:'Orbitron';font-size:.85rem;letter-spacing:.14em;color:var(--cyan);margin-bottom:6px}
+.card h4{font-family:'Orbitron';font-size:.7rem;letter-spacing:.12em;color:var(--dim);margin:14px 0 4px}
+.cmd{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(11,85,96,.6);font-size:1rem}
+.cmd code{font-family:'Share Tech Mono';font-size:.82rem;color:var(--gold)}
+.cmd span{color:var(--dim);font-size:.9rem;text-align:right}
+.note{font-size:.9rem;color:var(--dim);line-height:1.4;margin-top:6px}
+.card .btn{flex:none;width:100%;margin-top:14px}
+
+/* tablet portrait */
+@media (min-width:700px){
+  html{font-size:17px}
+  :root{--rs:clamp(140px,26dvh,300px)}
+  .reply{font-size:15px}
 }
-
-.message a {
-    color: #2563eb;
-    text-decoration: underline;
-    overflow-wrap: anywhere;
-    cursor: pointer;
+/* landscape (phones, tablets, desktop): 3 columns */
+@media (orientation:landscape) and (min-width:600px){
+  :root{--rs:clamp(100px,40dvh,300px)}
+  main{
+    grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:"status core weather" "batt core orbs";
+    align-content:stretch;
+  }
+  .a-batt,.a-orbs{align-self:stretch}
+  .orbs{justify-content:space-around}
+  .globe,.radar{max-width:clamp(54px,18dvh,140px)}
 }
-
-.message a:hover {
-    color: #1d4ed8;
-}
-
-.user {
-    align-self: flex-end;
-    background: #e9efff;
-    border-bottom-right-radius: 4px;
-}
-
-.ai {
-    align-self: flex-start;
-    background: #f4f4f4;
-    border-bottom-left-radius: 4px;
-}
-
-.welcome {
-    margin: auto;
-    text-align: center;
-    color: #777;
-    font-size: 17px;
-}
-
-footer {
-    padding: 12px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid #eee;
-}
-
-.input-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #ddd;
-    border-radius: 28px;
-    padding: 6px 7px 6px 16px;
-    background: white;
-}
-
-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-size: 15px;
-    min-width: 0;
-    background: transparent;
-}
-
-button {
-    width: 42px;
-    height: 42px;
-    border: none;
-    border-radius: 50%;
-    background: #2563eb;
-    color: white;
-    font-size: 21px;
-    cursor: pointer;
-}
-
-button:disabled {
-    opacity: 0.5;
-}
-
+@media (max-height:640px){ canvas#graph{display:none} }
+@media (max-height:420px){ html{font-size:13px} .dock{height:44px} .dock button{width:34px;height:34px} .btn{height:36px} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-
 <body>
-
-<header>AI</header>
-
-<main id="chat">
-    <div class="welcome" id="welcome">
-        Hello! 👋<br>
-        How can I help you?
+<div id="app">
+  <header class="top">
+    <div class="cmdbox">
+      <input id="cmd" type="text" placeholder="Message likho / Type a message…" autocomplete="off" enterkeyhint="send" aria-label="Message">
+      <button class="ibtn" id="send" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     </div>
-</main>
+    <button class="hbtn" id="langBtn" aria-label="Voice language">EN</button>
+    <button class="ibtn hbtn" id="spkBtn" aria-label="Voice output on/off" style="padding:0">
+      <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+    </button>
+    <div class="ver">v2.0</div>
+  </header>
 
-<footer>
-    <div class="input-box">
-        <input
-            type="text"
-            id="message"
-            placeholder="Message AI..."
-            autocomplete="off"
-        >
-        <button id="send" onclick="sendMessage()">➤</button>
-    </div>
-</footer>
+  <main id="main">
+    <section class="a-core">
+      <div class="core-wrap">
+        <div class="reactor" id="reactor" role="button" aria-label="Start listening">
+          <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="ring r4"></div><div class="ring r5"></div>
+          <div class="core">J.A.R.V.I.S</div>
+        </div>
+        <div class="you" id="you"></div>
+        <div class="reply" id="reply" aria-live="polite">
+          <div id="replyText">Online hoon, sir. Kya karna hai?<span class="cur"></span></div>
+          <div id="replyLink"></div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="allBtn">ALL COMMANDS</button>
+          <button class="btn" id="listenBtn">START LISTENING</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel a-status">
+      <div class="ptitle"><span>SYSTEM STATUS</span><span style="display:flex;gap:6px;align-items:center"><span class="tag live">LIVE</span><i class="dot" id="netDot"></i></span></div>
+      <div class="bar"><div class="brow"><span>RAM</span><span id="ramTxt">N/A</span></div><div class="track"><div class="fill na" id="ramBar"></div></div></div>
+      <div class="bar"><div class="brow"><span>Internet</span><span id="netTxt">--</span></div><div class="track"><div class="fill" id="netBar"></div></div></div>
+      <div class="bar"><div class="brow"><span>Ping</span><span id="pingTxt">--</span></div><div class="track"><div class="fill" id="pingBar"></div></div></div>
+      <canvas id="graph"></canvas>
+    </section>
+
+    <section class="panel a-weather">
+      <div class="ptitle"><span>WEATHER</span><span class="tag live">LIVE</span></div>
+      <div class="wrow"><svg viewBox="0 0 24 24"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg><span id="wTemp">--</span></div>
+      <div class="wrow"><svg viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.5 1.5A3.8 3.8 0 0 0 6.5 19z"/></svg><span id="wCond">--</span></div>
+      <div class="wrow"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg><span id="wHum">--</span></div>
+      <div class="wrow"><svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg><span id="wWind">--</span></div>
+      <div class="wplace" id="wPlace"></div>
+    </section>
+
+    <section class="panel a-batt">
+      <div class="ptitle"><span>BATTERY</span><span class="tag live">LIVE</span></div>
+      <div class="batt-big" id="battPct">N/A</div>
+      <div class="batt-state" id="battState">--</div>
+      <div class="bshell"><div class="bfill" id="battFill"></div></div>
+    </section>
+
+    <section class="panel a-orbs">
+      <div class="ptitle"><span>VISUALS</span><span class="tag anim">ANIMATION</span></div>
+      <div class="orbs">
+        <div class="orb">
+          <div class="globe">
+            <svg class="land" viewBox="0 0 400 200" preserveAspectRatio="none">
+              <g fill="rgba(0,255,230,.55)">
+                <path id="cont" d="M30 50l30-14 34 6 20 20-6 24-22 14-10 28-18 10-12-22-16-18zM96 120l22 6 10 28-8 26-16-8-6-30zM210 40l30-8 26 8 16 20-14 18-8 28-22 10-16 34-22-14 4-34-12-26zM296 52l34-12 38 14-6 30-30 12-22-8zM332 120l24 8-6 24-22-6z"/>
+                <use href="#cont" x="200"/>
+              </g>
+            </svg>
+          </div>
+          <span>Earth</span>
+        </div>
+        <div class="orb">
+          <canvas class="radar" id="radar" width="300" height="300"></canvas>
+          <span>Signal Radar</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="dock">
+    <button id="dCal" aria-label="Date"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></button>
+    <button id="dClock" aria-label="Time"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+    <button id="dBatt" aria-label="Battery"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M10 2h4M12 9l-2 4h4l-2 4"/></svg></button>
+    <button id="dWeather" aria-label="Weather"><svg viewBox="0 0 24 24"><path d="M17.5 15a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.5 1.5A3.8 3.8 0 0 0 6.5 15zM8 19v2M12 18v3M16 19v2"/></svg></button>
+    <button id="dStop" aria-label="Stop voice"><svg viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.7a8 8 0 1 0 11.4 0"/></svg></button>
+  </nav>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="card">
+    <h3>ALL COMMANDS</h3>
+    <h4>LOCAL (instant, on-device)</h4>
+    <div class="cmd"><code>time / samay</code><span>Current time</span></div>
+    <div class="cmd"><code>date / tarikh</code><span>Today's date</span></div>
+    <div class="cmd"><code>battery</code><span>Battery level</span></div>
+    <div class="cmd"><code>weather / mausam</code><span>Current weather</span></div>
+    <div class="cmd"><code>internet status</code><span>Connection + ping</span></div>
+    <div class="cmd"><code>open youtube</code><span>Opens YouTube</span></div>
+    <div class="cmd"><code>open google</code><span>Opens Google</span></div>
+    <div class="cmd"><code>google search …</code><span>Google search</span></div>
+    <div class="cmd"><code>clear chat</code><span>Reset AI memory</span></div>
+    <h4>AI (Aryan AI backend)</h4>
+    <p class="note">Baaki sab kuch — sawaal, baatcheet, knowledge, math, search — Aryan AI ko jaata hai. Conversation history saath bheji jaati hai.</p>
+    <h4>DATA LABELS</h4>
+    <p class="note"><b style="color:#46f0a0">LIVE</b> = real device / network measurement. <b style="color:var(--warn)">ANIMATION</b> = sirf visual effect, real data nahi. RAM: browser real device RAM usage nahi batata — sirf is tab ka JS memory dikhta hai (Chrome/Edge par), warna N/A.</p>
+    <button class="btn" id="clearBtn">CLEAR CHAT MEMORY</button>
+    <button class="btn" id="closeBtn" style="margin-top:8px">CLOSE</button>
+  </div>
+</div>
 
 <script>
+/* =========================================================
+   CONFIG — existing Aryan AI backend (not modified here)
+   ========================================================= */
+const CONFIG = {
+  API_URL: 'https://aryan-ai-backend-v2.vercel.app/api/chat',
+  PING_URL: 'https://aryan-ai-backend-v2.vercel.app/',
+  TIMEOUT_MS: 45000,
+  MAX_HISTORY: 20,                      // messages sent as context
+  DEFAULT_PLACE: { lat: 22.5726, lon: 88.3639, name: 'Kolkata (default)' },
+  SPEECH_LANG: { en: 'en-IN', hi: 'hi-IN' },
+  API_LANG: { en: 'en', hi: 'hi' }      // value sent in the "language" field
+};
 
-const API_URL = "https://aryan-ai-backend-v2.vercel.app/api/chat";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+};
 
-const chat = document.getElementById("chat");
-const input = document.getElementById("message");
-const sendBtn = document.getElementById("send");
+/* ---------- state ---------- */
+let lang = store.get('jarvis.lang', 'en') === 'hi' ? 'hi' : 'en';
+let voiceOn = store.get('jarvis.voice', 'on') !== 'off';
+let history = [];
+try{
+  const h = JSON.parse(store.get('jarvis.history', '[]'));
+  if (Array.isArray(h)) history = h.filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').slice(-CONFIG.MAX_HISTORY);
+}catch(e){}
+let busy = false, listening = false, rec = null, weather = null;
+const L = (en, hi) => lang === 'hi' ? hi : en;
+const saveHistory = () => store.set('jarvis.history', JSON.stringify(history.slice(-CONFIG.MAX_HISTORY)));
 
-let messages = [];
-let isLoading = false;
-
-
-/* Safe URL validation */
-
-function getSafeUrl(rawUrl) {
-    try {
-        const url = new URL(rawUrl);
-
-        if (
-            url.protocol !== "https:" &&
-            url.protocol !== "http:"
-        ) {
-            return null;
-        }
-
-        if (!url.hostname || !url.hostname.includes(".")) {
-            return null;
-        }
-
-        if (url.username || url.password) {
-            return null;
-        }
-
-        return url.href;
-
-    } catch {
-        return null;
-    }
+/* ---------- reply area ---------- */
+function showReply(text, kind = 'ai', link = null){
+  const r = $('reply');
+  r.className = 'reply ' + kind + (text.length > 140 ? ' long' : '');
+  $('replyText').textContent = text;
+  const l = $('replyLink'); l.innerHTML = '';
+  if (link){
+    const a = document.createElement('a');
+    a.href = link.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = link.label;
+    l.appendChild(a); l.style.display = 'block';
+  } else l.style.display = 'none';
+  r.scrollTop = 0;
+}
+function showThinking(){
+  $('reply').className = 'reply';
+  $('replyText').innerHTML = '<span class="think">THINKING<i></i><i></i><i></i></span>';
+  $('replyLink').style.display = 'none';
+}
+function setBusy(b){
+  busy = b;
+  $('reactor').classList.toggle('thinking', b);
+  $('send').disabled = b;
+  $('listenBtn').disabled = b;
 }
 
-
-/* Render clickable Markdown links safely */
-
-function renderMessage(element, text) {
-
-    const content = String(text || "");
-
-    const linkPattern = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g;
-
-    let lastIndex = 0;
-    let match;
-
-    while ((match = linkPattern.exec(content)) !== null) {
-
-        // Normal text before link
-        element.appendChild(
-            document.createTextNode(
-                content.slice(lastIndex, match.index)
-            )
-        );
-
-        const title = match[1];
-        const safeUrl = getSafeUrl(match[2]);
-
-        if (safeUrl) {
-
-            const link = document.createElement("a");
-
-            link.textContent = title;
-            link.href = safeUrl;
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-
-            element.appendChild(link);
-
-        } else {
-
-            element.appendChild(
-                document.createTextNode(match[0])
-            );
-        }
-
-        lastIndex = linkPattern.lastIndex;
+/* ---------- speech output (Hindi + English) ---------- */
+let voices = [];
+const loadVoices = () => { if ('speechSynthesis' in window) voices = speechSynthesis.getVoices(); };
+if ('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function pickVoice(code){
+  const c = code.toLowerCase();
+  const norm = v => v.lang.replace('_','-').toLowerCase();
+  return voices.find(v => norm(v) === c) || voices.find(v => norm(v).startsWith(c.slice(0,2))) || null;
+}
+let speakToken = 0;
+function stopSpeech(){
+  speakToken++;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  $('reactor').classList.remove('speaking');
+}
+function speak(text){
+  if (!voiceOn || !('speechSynthesis' in window)) return;
+  stopSpeech();
+  const clean = text.replace(/```[\s\S]*?```/g,' ').replace(/https?:\/\/\S+/g,' link ')
+    .replace(/[*_#`>~|]/g,'').replace(/\s+/g,' ').trim().slice(0, 2500);
+  if (!clean) return;
+  const parts = clean.match(/[^.!?।\n]+[.!?।]?/g) || [clean];
+  const chunks = []; let cur = '';
+  parts.forEach(p => { if ((cur + p).length > 180 && cur){ chunks.push(cur); cur = p; } else cur += p; });
+  if (cur.trim()) chunks.push(cur);
+  const token = ++speakToken;
+  chunks.forEach((c, i) => {
+    const u = new SpeechSynthesisUtterance(c.trim());
+    const code = /[\u0900-\u097F]/.test(c) ? CONFIG.SPEECH_LANG.hi : CONFIG.SPEECH_LANG.en;
+    u.lang = code; const v = pickVoice(code); if (v) u.voice = v;
+    if (i === 0) u.onstart = () => { if (token === speakToken) $('reactor').classList.add('speaking'); };
+    if (i === chunks.length - 1){
+      u.onend = u.onerror = () => { if (token === speakToken) $('reactor').classList.remove('speaking'); };
     }
+    speechSynthesis.speak(u);
+  });
+}
+function output(text, kind = 'ai', link = null){ showReply(text, kind, link); speak(text); }
 
-    // Remaining normal text
-    element.appendChild(
-        document.createTextNode(content.slice(lastIndex))
-    );
+/* ---------- live device metrics ---------- */
+const pingHist = [];
+function setBar(bar, txt, pct, label){
+  const b = $(bar); b.classList.remove('na'); b.style.width = pct + '%'; $(txt).textContent = label;
+}
+function setNA(bar, txt, label = 'N/A'){ $(bar).classList.add('na'); $(txt).textContent = label; }
+
+function updateNet(){
+  const on = navigator.onLine;
+  $('netDot').classList.toggle('off', !on);
+  if (!on) return setBar('netBar','netTxt', 0, 'Offline');
+  const c = navigator.connection && navigator.connection.effectiveType;
+  setBar('netBar','netTxt', 100, c ? 'Connected · ' + c : 'Connected');
+}
+addEventListener('online', () => { updateNet(); ping(); });
+addEventListener('offline', updateNet);
+
+async function ping(){
+  if (document.hidden) return;
+  if (!navigator.onLine) return setNA('pingBar','pingTxt','Offline');
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000), t = performance.now();
+  try{
+    await fetch(CONFIG.PING_URL, { method:'GET', mode:'no-cors', cache:'no-store', signal: ctl.signal });
+    const ms = Math.round(performance.now() - t);
+    pingHist.push(ms); if (pingHist.length > 40) pingHist.shift();
+    setBar('pingBar','pingTxt', Math.min(100, ms / 5), ms + ' ms');
+  }catch(e){
+    setNA('pingBar','pingTxt','Unreachable');
+  }finally{ clearTimeout(to); }
+  drawGraph();
+}
+function lastPing(){ return pingHist.length ? pingHist[pingHist.length - 1] : null; }
+
+function updateRam(){
+  const pm = performance && performance.memory;
+  if (pm && pm.jsHeapSizeLimit){
+    const used = pm.usedJSHeapSize, pct = Math.round(used / pm.jsHeapSizeLimit * 100);
+    setBar('ramBar','ramTxt', pct, Math.round(used / 1048576) + ' MB (tab)');
+  } else if (navigator.deviceMemory){
+    setNA('ramBar','ramTxt', '~' + navigator.deviceMemory + ' GB total');
+  } else setNA('ramBar','ramTxt','N/A');
 }
 
-
-/* Add chat message */
-
-function addMessage(text, type) {
-
-    document.getElementById("welcome")?.remove();
-
-    const div = document.createElement("div");
-
-    div.className = "message " + type;
-
-    if (type === "ai") {
-        renderMessage(div, text);
-    } else {
-        div.textContent = text;
-    }
-
-    chat.appendChild(div);
-
-    chat.scrollTop = chat.scrollHeight;
-
-    return div;
+function drawGraph(){
+  const c = $('graph'); if (!c.clientWidth || pingHist.length < 2) return;
+  const d = devicePixelRatio || 1; c.width = c.clientWidth * d; c.height = c.clientHeight * d;
+  const g = c.getContext('2d'); g.scale(d, d);
+  const w = c.clientWidth, h = c.clientHeight, max = Math.max(...pingHist, 50);
+  g.strokeStyle = '#00e5d4'; g.lineWidth = 1.5; g.shadowColor = '#00e5d4'; g.shadowBlur = 5; g.beginPath();
+  pingHist.forEach((v,i) => { const x = i/(pingHist.length-1)*w, y = h - (v/max)*(h-6) - 3; i ? g.lineTo(x,y) : g.moveTo(x,y); });
+  g.stroke();
 }
 
-
-/* Send message to backend */
-
-async function sendMessage() {
-
-    const message = input.value.trim();
-
-    if (!message || isLoading) return;
-
-    isLoading = true;
-    sendBtn.disabled = true;
-
-    addMessage(message, "user");
-
-    input.value = "";
-
-    const loading = addMessage("Thinking...", "ai");
-
-    try {
-
-        const response = await fetch(API_URL, {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-
-                message: message,
-
-                messages: messages,
-
-                character: "assistant",
-
-                language: "English"
-
-            })
-        });
-
-        const data = await response.json();
-
-        loading.remove();
-
-        if (!response.ok || !data.success) {
-            throw new Error(
-                data.error || "Something went wrong"
-            );
-        }
-
-        const reply = data.reply || "No response received.";
-
-        addMessage(reply, "ai");
-
-        messages.push(
-            {
-                role: "user",
-                content: message
-            },
-            {
-                role: "assistant",
-                content: reply
-            }
-        );
-
-    } catch (error) {
-
-        loading.textContent = "Error: " + error.message;
-
-    } finally {
-
-        isLoading = false;
-
-        sendBtn.disabled = false;
-
-        input.focus();
-
-    }
+/* battery */
+let battInfo = { pct: null, charging: false };
+if (navigator.getBattery){
+  navigator.getBattery().then(b => {
+    const up = () => {
+      const p = Math.round(b.level * 100);
+      battInfo = { pct: p, charging: b.charging };
+      $('battPct').textContent = p + '%';
+      $('battState').textContent = b.charging ? 'Charging' : (p >= 100 ? 'Fully Charged' : 'On battery');
+      $('battFill').style.width = p + '%';
+      $('battFill').classList.toggle('low', p <= 20 && !b.charging);
+    };
+    up(); b.addEventListener('levelchange', up); b.addEventListener('chargingchange', up);
+  }).catch(() => { $('battState').textContent = 'N/A (blocked)'; });
+} else {
+  $('battState').textContent = 'Not supported by this browser';
 }
 
+/* weather — Open-Meteo, real current conditions */
+const WMO = {0:'clear sky',1:'mostly clear',2:'partly cloudy',3:'overcast',45:'fog',48:'fog',51:'light drizzle',53:'drizzle',55:'heavy drizzle',56:'freezing drizzle',57:'freezing drizzle',61:'light rain',63:'rain',65:'heavy rain',66:'freezing rain',67:'freezing rain',71:'light snow',73:'snow',75:'heavy snow',77:'snow grains',80:'rain showers',81:'rain showers',82:'violent showers',85:'snow showers',86:'snow showers',95:'thunderstorm',96:'thunderstorm with hail',99:'thunderstorm with hail'};
+async function loadWeather(lat, lon, name){
+  try{
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&wind_speed_unit=ms`);
+    if (!r.ok) throw new Error('weather http ' + r.status);
+    const j = (await r.json()).current;
+    if (!j) throw new Error('no current');
+    weather = { t:j.temperature_2m, c: WMO[j.weather_code] || 'unknown', h:j.relative_humidity_2m, w:j.wind_speed_10m, place:name };
+    $('wTemp').textContent = 'Temp: ' + weather.t + '°C';
+    $('wCond').textContent = weather.c;
+    $('wHum').textContent = 'Humidity: ' + weather.h + '%';
+    $('wWind').textContent = 'Wind: ' + weather.w + ' m/s';
+    $('wPlace').textContent = name;
+    return true;
+  }catch(e){
+    $('wTemp').textContent = 'N/A'; $('wCond').textContent = 'Weather unavailable';
+    return false;
+  }
+}
+loadWeather(CONFIG.DEFAULT_PLACE.lat, CONFIG.DEFAULT_PLACE.lon, CONFIG.DEFAULT_PLACE.name);
+if (navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(
+    p => loadWeather(p.coords.latitude, p.coords.longitude, 'Your location'),
+    () => {}, { timeout: 8000, maximumAge: 600000 });
+}
+setInterval(() => { if (weather) loadWeather(...(weather.place === 'Your location' && lastCoords ? lastCoords : [CONFIG.DEFAULT_PLACE.lat, CONFIG.DEFAULT_PLACE.lon]), weather.place); }, 600000);
+let lastCoords = null;
+if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { lastCoords = [p.coords.latitude, p.coords.longitude]; }, () => {}, { maximumAge: 600000 });
 
-/* Enter key support */
+/* ---------- radar (animation only) ---------- */
+(function radar(){
+  const c = $('radar'), g = c.getContext('2d'), R = 150;
+  const blips = Array.from({length:7}, () => ({ a:Math.random()*6.28, r:30+Math.random()*100, life:0 }));
+  let ang = 0;
+  (function frame(){
+    g.clearRect(0,0,300,300); g.translate(R,R);
+    g.strokeStyle = 'rgba(0,229,212,.25)'; g.lineWidth = 1.5;
+    [50,100,145].forEach(r => { g.beginPath(); g.arc(0,0,r,0,6.28); g.stroke(); });
+    g.beginPath(); g.moveTo(-145,0); g.lineTo(145,0); g.moveTo(0,-145); g.lineTo(0,145); g.stroke();
+    const gr = g.createConicGradient(ang - 1.1, 0, 0);
+    gr.addColorStop(0,'rgba(0,229,212,0)'); gr.addColorStop(.17,'rgba(0,229,212,.45)'); gr.addColorStop(.175,'rgba(0,229,212,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(0,0,145,0,6.28); g.fill();
+    blips.forEach(b => {
+      const diff = ((ang - b.a) % 6.283 + 6.283) % 6.283;
+      if (diff < .1) b.life = 1;
+      b.life = Math.max(0, b.life - .008);
+      if (b.life > 0){ g.fillStyle = `rgba(0,229,212,${b.life})`; g.beginPath(); g.arc(Math.cos(b.a)*b.r, Math.sin(b.a)*b.r, 5, 0, 6.28); g.fill(); }
+    });
+    g.setTransform(1,0,0,1,0,0);
+    ang = (ang + (listening ? .09 : busy ? .06 : .028)) % 6.283;
+    requestAnimationFrame(frame);
+  })();
+})();
 
-input.addEventListener("keydown", function(event) {
+/* =========================================================
+   LOCAL COMMANDS
+   ========================================================= */
+function openUrl(url, label){
+  const w = window.open(url, '_blank');
+  if (w) return null;                    // opened
+  return { url, label };                 // popup blocked → show tappable link
+}
+const actions = {
+  time(){ return { text: L('It is ', 'अभी ') + new Date().toLocaleTimeString(lang === 'hi' ? 'hi-IN' : 'en-IN', { hour:'2-digit', minute:'2-digit' }) + L('.', ' बजे हैं।') }; },
+  date(){ return { text: L('Today is ', 'आज ') + new Date().toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + L('.', ' है।') }; },
+  battery(){
+    if (battInfo.pct == null) return { text: L('Battery data is not available on this browser.', 'इस ब्राउज़र पर बैटरी की जानकारी उपलब्ध नहीं है।') };
+    return { text: L(`Battery is at ${battInfo.pct} percent${battInfo.charging ? ' and charging' : ''}.`, `बैटरी ${battInfo.pct} प्रतिशत है${battInfo.charging ? ' और चार्ज हो रही है' : ''}।`) };
+  },
+  async weather(){
+    if (!weather) await loadWeather(CONFIG.DEFAULT_PLACE.lat, CONFIG.DEFAULT_PLACE.lon, CONFIG.DEFAULT_PLACE.name);
+    if (!weather) return { text: L('Weather data is unavailable right now.', 'अभी मौसम की जानकारी उपलब्ध नहीं है।'), kind:'error' };
+    return { text: L(`${weather.place}: ${weather.t} degrees, ${weather.c}. Humidity ${weather.h} percent, wind ${weather.w} metres per second.`, `${weather.place}: तापमान ${weather.t} डिग्री, ${weather.c}। नमी ${weather.h} प्रतिशत, हवा ${weather.w} मीटर प्रति सेकंड।`) };
+  },
+  internet(){
+    if (!navigator.onLine) return { text: L('Internet is offline.', 'इंटरनेट बंद है।') };
+    const p = lastPing(), c = navigator.connection && navigator.connection.effectiveType;
+    return { text: L(`Internet is connected${c ? ' (' + c + ')' : ''}. ` + (p != null ? `Ping to Aryan AI backend is ${p} milliseconds.` : 'Ping not measured yet.'), `इंटरनेट चालू है${c ? ' (' + c + ')' : ''}। ` + (p != null ? `बैकएंड तक पिंग ${p} मिलीसेकंड है।` : 'पिंग अभी मापी नहीं गई।')) };
+  },
+  youtube(){ return { text: L('Opening YouTube.', 'यूट्यूब खोल रहा हूँ।'), link: openUrl('https://www.youtube.com', 'Tap to open YouTube') }; },
+  google(){ return { text: L('Opening Google.', 'गूगल खोल रहा हूँ।'), link: openUrl('https://www.google.com', 'Tap to open Google') }; },
+  search(q){ return { text: L('Searching Google for: ', 'गूगल पर खोज रहा हूँ: ') + q, link: openUrl('https://www.google.com/search?q=' + encodeURIComponent(q), 'Tap to open results') }; },
+  clear(){ history = []; saveHistory(); return { text: L('Conversation memory cleared.', 'बातचीत की मेमोरी साफ़ कर दी गई।') }; },
+  help(){ $('sheet').classList.add('open'); return { text: L('Here are all commands.', 'ये रहे सभी कमांड।') }; }
+};
 
-    if (event.key === "Enter") {
-        sendMessage();
+/* Strict matching so real questions ("time complexity of quicksort") still go to the AI */
+function matchLocal(raw){
+  const t = raw.toLowerCase().replace(/[?!.,।]/g,' ').replace(/\s+/g,' ').trim();
+  const n = t.split(' ').length;
+  let m;
+  if ((m = t.match(/^(?:google search|search on google|search google for|google for)\s+(.+)$/))) return ['search', m[1]];
+  if (/^(open|launch|start)\s+youtube$/.test(t) || /^youtube\s+(kholo|khol do|open)$/.test(t) || /^यूट्यूब\s+(खोलो|खोल दो)$/.test(t)) return ['youtube'];
+  if (/^(open|launch|start)\s+google$/.test(t) || /^google\s+(kholo|khol do|open)$/.test(t) || /^गूगल\s+(खोलो|खोल दो)$/.test(t)) return ['google'];
+  if (/^(clear|reset)\s+(chat|memory|conversation|history)$/.test(t)) return ['clear'];
+  if (/^(all commands|commands|help)$/.test(t)) return ['help'];
+  if (n <= 6 && /\b(weather|mausam)\b|मौसम/.test(t) && !/\b(in|at|of|for|mein|me)\b|\bमें\b/.test(t)) return ['weather'];
+  if (n <= 5 && /\bbattery\b|बैटरी/.test(t)) return ['battery'];
+  if (n <= 6 && /\b(internet|wifi|network|ping)\b|इंटरनेट/.test(t) && /(status|connected|connection|check|working|chal|chalu|ping|स्थिति|चालू)/.test(t)) return ['internet'];
+  if (n <= 6 && /\b(date|tarikh|tareekh)\b|तारीख|तारिख|\bwhat day\b/.test(t)) return ['date'];
+  if (n <= 6 && /\b(time|samay|waqt|baje)\b|समय|कितने बजे/.test(t) && !/\b(in|at|zone|complexity|machine|travel|table|series)\b/.test(t)) return ['time'];
+  return null;
+}
+
+/* =========================================================
+   AI BACKEND
+   Request  : POST { message, messages, language }
+   Response : reply text read from json.data.reply, else json.reply
+   ========================================================= */
+function extractReply(json){
+  const r = (json && json.data && typeof json.data.reply === 'string') ? json.data.reply
+          : (json && typeof json.reply === 'string') ? json.reply : null;
+  return r && r.trim() ? r.trim() : null;
+}
+async function askBackend(text){
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), CONFIG.TIMEOUT_MS);
+  try{
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, messages: history.slice(-CONFIG.MAX_HISTORY), language: CONFIG.API_LANG[lang] }),
+      signal: ctl.signal
+    });
+    const raw = await res.text();
+    let json = null; try{ json = JSON.parse(raw); }catch(e){}
+    if (!res.ok){
+      const detail = json && (typeof json.error === 'string' ? json.error : (json.error && typeof json.error.message === 'string' ? json.error.message : null));
+      throw { kind:'http', status: res.status, detail };
     }
+    const reply = extractReply(json);
+    if (!reply){ console.error('[JARVIS] Unexpected backend response:', raw.slice(0, 500)); throw { kind:'invalid' }; }
+    return reply;
+  }catch(e){
+    if (e && e.kind) throw e;
+    if (e && e.name === 'AbortError') throw { kind:'timeout' };
+    throw { kind:'network' };
+  }finally{ clearTimeout(to); }
+}
+function errorText(e){
+  if (!navigator.onLine) return L('You are offline. Check your internet connection.', 'आप ऑफ़लाइन हैं। इंटरनेट कनेक्शन जाँचें।');
+  switch (e.kind){
+    case 'timeout': return L('Aryan AI took too long to respond. Please try again.', 'Aryan AI ने समय पर जवाब नहीं दिया। फिर से कोशिश करें।');
+    case 'http': return L(`Aryan AI backend returned an error (HTTP ${e.status})${e.detail ? ': ' + e.detail : ''}.`, `Aryan AI बैकएंड में त्रुटि (HTTP ${e.status})${e.detail ? ': ' + e.detail : ''}।`);
+    case 'invalid': return L('Aryan AI sent an invalid response. Please try again.', 'Aryan AI से अमान्य जवाब मिला। फिर से कोशिश करें।');
+    default: return L('Aryan AI backend is unavailable right now. Please try again shortly.', 'Aryan AI बैकएंड अभी उपलब्ध नहीं है। थोड़ी देर बाद कोशिश करें।');
+  }
+}
 
+/* ---------- main submit ---------- */
+async function submit(raw){
+  const text = (raw || '').trim();
+  if (!text) return;
+  if (busy) return;                       // prevent duplicate requests
+  stopSpeech();
+  $('cmd').value = '';
+  $('you').textContent = '› ' + text;
+
+  const local = matchLocal(text);
+  if (local){
+    setBusy(true);
+    try{
+      const out = await actions[local[0]](local[1]);
+      output(out.text, out.kind || 'local', out.link || null);
+    } finally { setBusy(false); }
+    return;
+  }
+
+  setBusy(true); showThinking();
+  try{
+    const reply = await askBackend(text);
+    history.push({ role:'user', content:text }, { role:'assistant', content:reply });
+    history = history.slice(-CONFIG.MAX_HISTORY); saveHistory();
+    output(reply, 'ai');
+  }catch(e){
+    output(errorText(e), 'error');
+  }finally{ setBusy(false); }
+}
+
+/* ---------- voice input ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function resetListenUI(){
+  listening = false;
+  $('reactor').classList.remove('listening');
+  $('listenBtn').classList.remove('live');
+  $('listenBtn').textContent = 'START LISTENING';
+}
+function toggleListen(){
+  if (listening){ rec && rec.stop(); return; }
+  if (busy) return;
+  stopSpeech();                           // stop AI voice when a new voice command starts
+  if (!SR) return showReply(L('Voice input is not supported in this browser. Try Chrome (Android/desktop) or Safari 14.1+.', 'इस ब्राउज़र में वॉइस इनपुट समर्थित नहीं है। Chrome या नया Safari आज़माएँ।'), 'error');
+  rec = new SR();
+  rec.lang = CONFIG.SPEECH_LANG[lang]; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+  let finalText = '', heard = false;
+  rec.onstart = () => {
+    listening = true; $('reactor').classList.add('listening'); $('listenBtn').classList.add('live'); $('listenBtn').textContent = 'LISTENING…';
+    showReply(L('Listening…', 'सुन रहा हूँ…'), 'local');
+  };
+  rec.onresult = e => {
+    heard = true; let t = '';
+    for (let i = 0; i < e.results.length; i++){ t += e.results[i][0].transcript; if (e.results[i].isFinal) finalText = t; }
+    $('cmd').value = t;
+  };
+  rec.onerror = e => {
+    const msg = { 'not-allowed': L('Microphone permission denied. Allow mic access in browser settings.', 'माइक्रोफ़ोन की अनुमति नहीं मिली। ब्राउज़र सेटिंग में अनुमति दें।'),
+                  'service-not-allowed': L('Microphone permission denied. Allow mic access in browser settings.', 'माइक्रोफ़ोन की अनुमति नहीं मिली।'),
+                  'no-speech': L('I did not hear anything. Tap and try again.', 'कुछ सुनाई नहीं दिया। फिर से कोशिश करें।'),
+                  'audio-capture': L('No microphone found.', 'माइक्रोफ़ोन नहीं मिला।'),
+                  'network': L('Speech recognition needs an internet connection.', 'वॉइस पहचान के लिए इंटरनेट चाहिए।') }[e.error];
+    if (msg) showReply(msg, 'error');
+    heard = true; finalText = '';         // avoid duplicate error text in onend
+  };
+  rec.onend = () => {
+    resetListenUI();
+    const t = (finalText || $('cmd').value).trim();
+    if (t) submit(t);
+    else if (!heard) showReply(L('I did not hear anything. Tap and try again.', 'कुछ सुनाई नहीं दिया। फिर से कोशिश करें।'), 'error');
+  };
+  try{ rec.start(); }catch(e){ resetListenUI(); }
+}
+
+/* ---------- UI wiring ---------- */
+$('send').onclick = () => submit($('cmd').value);
+$('cmd').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit($('cmd').value); } });
+$('cmd').addEventListener('focus', stopSpeech);
+$('listenBtn').onclick = toggleListen;
+$('reactor').onclick = toggleListen;
+
+function refreshLangUI(){
+  $('langBtn').textContent = lang === 'hi' ? 'हि' : 'EN';
+  $('cmd').placeholder = lang === 'hi' ? 'संदेश लिखें…' : 'Message likho / Type a message…';
+}
+$('langBtn').onclick = () => {
+  lang = lang === 'en' ? 'hi' : 'en'; store.set('jarvis.lang', lang); refreshLangUI();
+  if (listening && rec) rec.stop();
+  showReply(lang === 'hi' ? 'वॉइस भाषा: हिंदी' : 'Voice language: English', 'local');
+};
+function refreshSpkUI(){ $('spkBtn').classList.toggle('off', !voiceOn); $('spkBtn').style.opacity = voiceOn ? 1 : .55; }
+$('spkBtn').onclick = () => {
+  voiceOn = !voiceOn; store.set('jarvis.voice', voiceOn ? 'on' : 'off'); if (!voiceOn) stopSpeech(); refreshSpkUI();
+  showReply(voiceOn ? L('Voice output on.', 'आवाज़ चालू।') : L('Voice output off.', 'आवाज़ बंद।'), 'local');
+};
+
+const dockMap = { dCal:'date', dClock:'time', dBatt:'battery', dWeather:'weather' };
+Object.keys(dockMap).forEach(id => $(id).onclick = async () => {
+  if (busy) return;
+  stopSpeech();
+  document.querySelectorAll('.dock button').forEach(b => b.classList.remove('on'));
+  $(id).classList.add('on');
+  $('you').textContent = '› ' + dockMap[id];
+  setBusy(true);
+  try{ const o = await actions[dockMap[id]](); output(o.text, o.kind || 'local'); } finally { setBusy(false); }
 });
+$('dStop').onclick = () => { stopSpeech(); if (listening && rec) rec.stop(); };
 
+$('allBtn').onclick = () => $('sheet').classList.add('open');
+$('closeBtn').onclick = () => $('sheet').classList.remove('open');
+$('sheet').onclick = e => { if (e.target === $('sheet')) $('sheet').classList.remove('open'); };
+$('clearBtn').onclick = () => { actions.clear(); $('sheet').classList.remove('open'); showReply(L('Conversation memory cleared.', 'बातचीत की मेमोरी साफ़ कर दी गई।'), 'local'); };
+
+/* ---------- boot ---------- */
+refreshLangUI(); refreshSpkUI();
+updateNet(); updateRam(); ping();
+setInterval(updateRam, 3000);
+setInterval(ping, 10000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden){ updateNet(); ping(); } });
+addEventListener('resize', drawGraph);
 </script>
-
 </body>
 </html>
