@@ -207,7 +207,6 @@ body.sleep .reactor .ring{animation-duration:30s}
       <input id="cmd" type="text" placeholder="Message likho / Type a message…" autocomplete="off" enterkeyhint="send" aria-label="Message">
       <button class="ibtn" id="send" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     </div>
-    <button class="hbtn" id="langBtn" aria-label="Voice language">EN</button>
     <button class="ibtn hbtn" id="spkBtn" aria-label="Voice output on/off" style="padding:0">
       <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
     </button>
@@ -224,7 +223,7 @@ body.sleep .reactor .ring{animation-duration:30s}
         <div class="vstatus" id="vstatus" data-s="standby"><i></i><span id="vstatusTxt">STARTING…</span></div>
         <div class="you" id="you"></div>
         <div class="reply" id="reply" aria-live="polite">
-          <div id="replyText">Online hoon, sir. Kya karna hai?<span class="cur"></span></div>
+          <div id="replyText">Hello Sir, JARVIS systems are online. How may I help you?<span class="cur"></span></div>
           <div id="replyLink"></div>
         </div>
         <div class="btns">
@@ -308,7 +307,9 @@ body.sleep .reactor .ring{animation-duration:30s}
     <div class="cmd"><code>Jarvis, Stop</code><span>Stop voice + request</span></div>
     <div class="cmd"><code>Jarvis, Sleep Mode</code><span>Ignore everything</span></div>
     <div class="cmd"><code>Jarvis, Wake Up</code><span>Wake from sleep</span></div>
-    <p class="note">Mic sirf tab sunta hai jab page khula aur screen par ho. JARVIS bolte waqt mic band rehta hai (apni awaaz na sune), isliye bolte waqt "Stop" bolna kaam nahi karega — neeche ka stop button use karo.</p>
+    <p class="note"><b>Interrupt:</b> JARVIS bol raha ho tab bhi "Hey Jarvis" / "Jarvis" bolo — wo turant ruk kar "Yes Sir, I am listening." bolega. Agar aapki device bolte waqt mic chalne nahi deti, to JARVIS khud pehchan kar mic bolte waqt band kar deta hai (tab neeche ka stop button use karo).</p>
+    <p class="note"><b>Language:</b> English se shuru hota hai, phir aap jo bhasha bolo/likho (Hindi, Gujarati, Bengali, Hinglish, etc.) usi mein jawab deta hai. Koi language button nahi hai.</p>
+    <p class="note">Mic sirf tab sunta hai jab page khula aur screen par ho.</p>
     <h4>AI (Aryan AI backend)</h4>
     <p class="note">Baaki sab kuch — sawaal, baatcheet, knowledge, math, search — Aryan AI ko jaata hai. Conversation history saath bheji jaati hai.</p>
     <h4>DATA LABELS</h4>
@@ -329,8 +330,8 @@ const CONFIG = {
   IDLE_MS: 25000,                       // active conversation → standby after this much silence (Auto Mode off)
   MAX_HISTORY: 20,                      // messages sent as context
   DEFAULT_PLACE: { lat: 22.5726, lon: 88.3639, name: 'Kolkata (default)' },
-  SPEECH_LANG: { en: 'en-IN', hi: 'hi-IN' },
-  API_LANG: { en: 'en', hi: 'hi' }      // value sent in the "language" field
+  LANG_HINT: true,                      // add a one-line "reply in <language>" hint to the message sent to the backend
+  REC_ORDER: ['en-IN','hi-IN','gu-IN','bn-IN']   // recognition languages tried when speech is unclear
 };
 
 const $ = id => document.getElementById(id);
@@ -340,7 +341,7 @@ const store = {
 };
 
 /* ---------- state ---------- */
-let lang = store.get('jarvis.lang', 'en') === 'hi' ? 'hi' : 'en';
+let lang = 'en';                          // 'en' | 'hi' — only used for built-in local replies; follows the user automatically
 let voiceOn = store.get('jarvis.voice', 'on') !== 'off';
 let history = [];
 try{
@@ -349,6 +350,84 @@ try{
 }catch(e){}
 let busy = false, listening = false, rec = null, weather = null;
 const L = (en, hi) => lang === 'hi' ? hi : en;
+
+/* =========================================================
+   AUTOMATIC LANGUAGE DETECTION
+   Starts in English, then follows the language of every user message.
+   ========================================================= */
+const ENGLISH = { code:'en', name:'English', rec:'en-IN', tts:'en-IN', romanized:false, latin:true };
+let userLang = ENGLISH, curRecLocale = 'en-IN', lastSentLang = 'en', langProbe = 0;
+const SCRIPTS = [
+  ['hi','Hindi','hi-IN',/[\u0900-\u097F]/g], ['bn','Bengali','bn-IN',/[\u0980-\u09FF]/g],
+  ['pa','Punjabi','pa-IN',/[\u0A00-\u0A7F]/g], ['gu','Gujarati','gu-IN',/[\u0A80-\u0AFF]/g],
+  ['or','Odia','or-IN',/[\u0B00-\u0B7F]/g], ['ta','Tamil','ta-IN',/[\u0B80-\u0BFF]/g],
+  ['te','Telugu','te-IN',/[\u0C00-\u0C7F]/g], ['kn','Kannada','kn-IN',/[\u0C80-\u0CFF]/g],
+  ['ml','Malayalam','ml-IN',/[\u0D00-\u0D7F]/g], ['ar','Arabic','ar-SA',/[\u0600-\u06FF]/g],
+  ['ja','Japanese','ja-JP',/[\u3040-\u30FF]/g], ['ko','Korean','ko-KR',/[\uAC00-\uD7AF]/g],
+  ['zh','Chinese','zh-CN',/[\u4E00-\u9FFF]/g], ['th','Thai','th-TH',/[\u0E00-\u0E7F]/g],
+  ['ru','Russian','ru-RU',/[\u0400-\u04FF]/g], ['el','Greek','el-GR',/[\u0370-\u03FF]/g],
+  ['he','Hebrew','he-IL',/[\u0590-\u05FF]/g]
+];
+const W = s => new Set(s.split(' '));
+const LATIN_LANGS = [
+  { code:'hi', name:'Hinglish (Hindi written in English letters)', rec:'en-IN', tts:'hi-IN', rom:true,
+    words:W('kya hai hain nahi nahin kaise kaisa kaisi kab kahan kyun kyu mujhe mujhko tumhe aap tum mera meri mere hum humein apna karo karna kardo batao bata bolo dikhao chalo raha rahi rahe tha thi hoga hogi aur lekin toh bhi abhi aaj kal ka ki ke ko se mein ye yeh wo woh ek accha acha theek thik haan han ji bhai yaar kuch liye wala wali sakta sakte chahiye samay mausam namaste dhanyavad shukriya kitna kitne kitni'),
+    strong:W('nahi nahin kaise kaisa kaisi kyun kya namaste shukriya dhanyavad mujhe') },
+  { code:'gu', name:'Gujarati (written in English letters)', rec:'gu-IN', tts:'en-IN', rom:true,
+    words:W('kem cho majama maja shu che chhe nathi tame tamne mane mari maru amne ame su kyare kevi kevu avo javu joie jaiye saru sari bov thodu aaje kale tamaru tamari kai shun kon kyan'),
+    strong:W('kem cho majama shu che chhe') },
+  { code:'bn', name:'Bengali (written in English letters)', rec:'bn-IN', tts:'en-IN', rom:true,
+    words:W('ami tumi apni khobor kemon acho bhalo valo nai ache achi korbo dao kothay keno ekta amar tomar amader'),
+    strong:W('khobor kemon bhalo ami') },
+  { code:'es', name:'Spanish', rec:'es-ES', tts:'es-ES', words:W('que los las una por con para como está esta qué cómo hola gracias buenos días muy pero también donde cuando'), strong:W('hola gracias') },
+  { code:'fr', name:'French', rec:'fr-FR', tts:'fr-FR', words:W('les des est une pour que qui dans pas avec bonjour merci comment je suis vous nous très aussi mais où'), strong:W('bonjour merci') },
+  { code:'de', name:'German', rec:'de-DE', tts:'de-DE', words:W('der die das und ist nicht ich du wie was ein eine mit für hallo danke bitte auch aber'), strong:W('hallo danke') },
+  { code:'pt', name:'Portuguese', rec:'pt-BR', tts:'pt-BR', words:W('não uma para com como olá obrigado você está também mas então muito bom dia'), strong:W('olá obrigado') },
+  { code:'it', name:'Italian', rec:'it-IT', tts:'it-IT', words:W('che non per con come ciao grazie sono questo anche ma molto buongiorno perché'), strong:W('ciao grazie buongiorno') }
+];
+const EN_WORDS = W('the is are was what how why when where who you your i me my we it this that and or for with can please tell give show open play does did will would should have has not hello thanks thank be to of in on at do');
+
+function detectLanguage(text, prev){
+  prev = prev || ENGLISH;
+  const s = (text || '').trim();
+  if (!s) return prev;
+  let native = 0; const cnt = {};
+  for (const sc of SCRIPTS){ const m = s.match(sc[3]); cnt[sc[0]] = m ? m.length : 0; native += cnt[sc[0]]; }
+  const toks = s.split(/\s+/).filter(Boolean);
+  const nativeW = toks.filter(w => SCRIPTS.some(sc => (w.match(sc[3]) || []).length)).length;
+  const latinW = toks.filter(w => /[A-Za-z\u00C0-\u024F]/.test(w)).length;
+  if (native > 0 && nativeW >= Math.max(1, latinW * 0.25)){   // native script, also Gujarati/Bengali/Hindi mixed with English words
+    if (cnt.ja > 0){ cnt.ja += cnt.zh; cnt.zh = 0; }
+    let best = SCRIPTS[0]; for (const sc of SCRIPTS) if (cnt[sc[0]] > cnt[best[0]]) best = sc;
+    return { code:best[0], name:best[1], rec:best[2], tts:best[2], romanized:false, latin:false };
+  }
+  const words = s.toLowerCase().replace(/[^a-z\u00C0-\u024F'\s]/g,' ').split(/\s+/).filter(Boolean);
+  if (!words.length) return prev;
+  const score = set => { const seen = new Set(); for (const w of words) if (set.has(w)) seen.add(w); return seen.size; };
+  const en = score(EN_WORDS);
+  let best = null, bn = 0;
+  for (const l of LATIN_LANGS){ const n = score(l.words); if (n > bn){ bn = n; best = l; } }
+  if (best && ((bn >= 2 && bn >= en) || (bn === 1 && words.length === 1 && best.strong.has(words[0]))))
+    return { code:best.code, name:best.name, rec:best.rec, tts:best.tts, romanized:!!best.rom, latin:true };
+  if (en >= 1) return ENGLISH;
+  return words.length <= 3 ? prev : ENGLISH;           // short neutral text (names, "ok") keeps the current language
+}
+function setUserLang(d){
+  userLang = d; lang = d.code === 'hi' ? 'hi' : 'en';
+  if (d.rec !== curRecLocale){ curRecLocale = d.rec; if (recWanted) restartRec(); }   // listen in the user's language next
+}
+const PH = {
+  listenSir:  { en:'Yes Sir, I am listening.', hi:'जी सर, मैं सुन रहा हूँ।', gu:'હા સાહેબ, હું સાંભળી રહ્યો છું.', bn:'জি স্যার, আমি শুনছি।' },
+  listenBoss: { en:'Yes Boss, I am listening.', hi:'जी बॉस, मैं सुन रहा हूँ।', gu:'હા બોસ, હું સાંભળી રહ્યો છું.', bn:'জি বস, আমি শুনছি।' },
+  retry:      { en:'Sorry, I did not catch that. Please say it again.', hi:'माफ़ कीजिए, मैं समझ नहीं पाया। कृपया दोबारा कहें।', gu:'માફ કરશો, હું સમજી શક્યો નહીં. કૃપા કરીને ફરી કહો.', bn:'দুঃখিত, আমি বুঝতে পারিনি। অনুগ্রহ করে আবার বলুন।' }
+};
+const T = k => PH[k][userLang.code] || PH[k].en;
+const GREETING = 'Hello Sir, JARVIS systems are online. How may I help you?';
+function withLangHint(text){
+  if (!CONFIG.LANG_HINT) return text;
+  if (userLang.code === 'en' && lastSentLang === 'en') return text;
+  return text + '\n\n(Please reply in ' + (userLang.code === 'en' ? 'English' : userLang.name) + ', the same language as my message above.)';
+}
 const saveHistory = () => store.set('jarvis.history', JSON.stringify(history.slice(-CONFIG.MAX_HISTORY)));
 
 /* ---------- reply area ---------- */
@@ -376,26 +455,40 @@ function setBusy(b){
   updateStatus();
 }
 
-/* ---------- speech output (Hindi + English) ---------- */
+/* ---------- speech output (auto language, natural voice, mic stays on) ---------- */
 let voices = [];
 const loadVoices = () => { if ('speechSynthesis' in window) voices = speechSynthesis.getVoices(); };
 if ('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 function pickVoice(code){
-  const c = code.toLowerCase();
-  const norm = v => v.lang.replace('_','-').toLowerCase();
-  return voices.find(v => norm(v) === c) || voices.find(v => norm(v).startsWith(c.slice(0,2))) || null;
+  const c = code.toLowerCase(), base = c.slice(0,2);
+  let best = null, bs = -1;
+  for (const v of voices){
+    const vl = v.lang.replace('_','-').toLowerCase();
+    let sc; if (vl === c) sc = 3; else if (vl.startsWith(base)) sc = 2; else continue;
+    if (/natural|neural|enhanced|premium|google/i.test(v.name)) sc += 1.5;   // prefer natural-sounding voices
+    if (!v.localService) sc += .5;
+    if (sc > bs){ bs = sc; best = v; }
+  }
+  return best;
+}
+const missingNoted = new Set();
+function noteMissingVoice(loc){
+  if (!voices.length || missingNoted.has(loc)) return;
+  const b = loc.slice(0,2).toLowerCase();
+  if (voices.some(v => v.lang.replace('_','-').toLowerCase().startsWith(b))) return;
+  missingNoted.add(loc);
+  $('you').textContent = 'ℹ No ' + loc + ' voice on this device — add it in your text-to-speech settings';
 }
 let speakToken = 0, speakingNow = false, muted = false, muteGen = 0, safetyTimer = null;
-let lastSpokenNorm = '', lastSpokenEnd = 0, ttsBlocked = false;
+let spokenSet = new Set(), lastSpokenEnd = 0, ttsBlocked = false, duplexOK = true, duplexFails = 0;
+const tokens = s => norm(s).split(' ').filter(Boolean);
 
-/* Mic is fully stopped while JARVIS talks, and stays muted ~450 ms after, so it never hears itself. */
-function beginMute(){ muteGen++; muted = true; abortRec(); }
+/* Mic stays ON while JARVIS talks (so "Jarvis" can interrupt). Only if the device proves it can't
+   do both (duplexOK=false) do we fall back to muting the mic during speech. */
+function beginMute(){ muteGen++; if (!duplexOK){ muted = true; abortRec(); } }
 function endMute(delay = 450){
   const g = muteGen;
-  setTimeout(() => {
-    if (g !== muteGen) return;            // a newer speech started
-    muted = false; startRec(); armIdle(); updateStatus();
-  }, delay);
+  setTimeout(() => { if (g !== muteGen) return; muted = false; startRec(); armIdle(); updateStatus(); }, delay);
 }
 function cancelSpeech(){
   speakToken++; clearTimeout(safetyTimer); speakingNow = false;
@@ -416,7 +509,8 @@ function speak(text, done){
   if (!clean) return finishNow();
   cancelSpeech();
   beginMute(); speakingNow = true;
-  lastSpokenNorm = norm(clean);
+  spokenSet = new Set(tokens(clean));
+  const base = detectLanguage(clean, userLang), baseLatin = base.latin ? base : ENGLISH;
   const parts = clean.match(/[^.!?।\n]+[.!?।]?/g) || [clean];
   const chunks = []; let cur = '';
   parts.forEach(p => { if ((cur + p).length > 180 && cur){ chunks.push(cur); cur = p; } else cur += p; });
@@ -426,6 +520,7 @@ function speak(text, done){
     if (finished || token !== speakToken) return;
     finished = true; clearTimeout(safetyTimer); speakingNow = false;
     lastSpokenEnd = Date.now();
+    if (recRunning) duplexFails = 0;
     $('reactor').classList.remove('speaking');
     endMute(450); updateStatus();
     if (done) done();
@@ -433,8 +528,8 @@ function speak(text, done){
   safetyTimer = setTimeout(finish, clean.length * 95 + 6000);   // onend is unreliable on some mobile browsers
   chunks.forEach((c, i) => {
     const u = new SpeechSynthesisUtterance(c.trim());
-    const code = /[\u0900-\u097F]/.test(c) ? CONFIG.SPEECH_LANG.hi : CONFIG.SPEECH_LANG.en;
-    u.lang = code; const v = pickVoice(code); if (v) u.voice = v;
+    const loc = detectLanguage(c, baseLatin).tts;                 // per-sentence language → mixed replies sound right
+    u.lang = loc; const v = pickVoice(loc); if (v) u.voice = v; else noteMissingVoice(loc);
     if (i === 0) u.onstart = () => { if (token === speakToken) $('reactor').classList.add('speaking'); };
     u.onerror = ev => { if (ev && ev.error === 'not-allowed') ttsBlocked = true; finish(); };
     if (i === chunks.length - 1) u.onend = finish;
@@ -639,7 +734,7 @@ async function askBackend(text){
     const res = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, messages: history.slice(-CONFIG.MAX_HISTORY), language: CONFIG.API_LANG[lang] }),
+      body: JSON.stringify({ message: withLangHint(text), messages: history.slice(-CONFIG.MAX_HISTORY), language: userLang.code }),
       signal: ctl.signal
     });
     const raw = await res.text();
@@ -650,6 +745,7 @@ async function askBackend(text){
     }
     const reply = extractReply(json);
     if (!reply){ console.error('[JARVIS] Unexpected backend response:', raw.slice(0, 500)); throw { kind:'invalid' }; }
+    lastSentLang = userLang.code;
     return reply;
   }catch(e){
     if (e && e.kind) throw e;
@@ -676,6 +772,7 @@ async function submit(raw){
   clearIdle();
   $('cmd').value = '';
   $('you').textContent = '› ' + text;
+  setUserLang(detectLanguage(text, userLang));      // follow the user's latest language
 
   const local = matchLocal(text);
   if (local){
@@ -694,13 +791,13 @@ async function submit(raw){
     history = history.slice(-CONFIG.MAX_HISTORY); saveHistory();
     output(reply, 'ai');
   }catch(e){
-    if (e && e.kind === 'cancelled') showReply(L('Stopped.', 'रुक गया।'), 'local');
+    if (e && e.kind === 'cancelled'){ if (suppressStopMsg) suppressStopMsg = false; else showReply(L('Stopped.', 'रुक गया।'), 'local'); }
     else output(errorText(e), 'error');
   }finally{ setBusy(false); armIdle(); }
 }
 
 /* =========================================================
-   HANDS-FREE VOICE — wake word + continuous conversation
+   HANDS-FREE VOICE — wake word, barge-in, continuous conversation
    Browser Web Speech API: only works while the page is open
    and visible. No always-on background listening.
    ========================================================= */
@@ -708,11 +805,12 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let mode = 'standby';                     // 'standby' (wake word only) | 'active' (conversation) | 'sleep'
 let autoMode = false;                     // true = stay in conversation, no idle timeout
 let recRunning = false, recStarting = false, recWanted = false;
-let permDenied = false, needGesture = false, paused = false, gestureSeen = false;
+let permDenied = false, needGesture = false, paused = false, gestureSeen = false, greetPending = false;
 let restartTimer = null, idleTimer = null, lastFinal = '', lastFinalAt = 0;
+let interrupting = false, greetTimer = null, failTimer = null, greetedAt = 0, greetedText = '', lastWakeText = '', suppressStopMsg = false;
 const REC = { fastFails: 0, MAX_FAST: 6 };
 
-const WAKE = ['jarvis','jarvas','jarves','jarvish','jarwis','jaarvis','जार्विस','जारविस','जर्विस','जार्वीस','जारविज','जार्विज'];
+const WAKE = ['jarvis','jarvas','jarves','jarvish','jarwis','jaarvis','जार्विस','जारविस','जर्विस','जार्वीस','जारविज','जार्विज','जार्विश','જાર્વિસ','જારવિસ','জার্ভিস','জারভিস','জার্ভিজ'];
 const WAKE_RE = new RegExp('(?:^|\\s)(?:hey |hi |ok |okay |hello |हे |हाय |ओके )?(' + WAKE.join('|') + ')(?=\\s|$)');
 function norm(s){ return s.toLowerCase().replace(/[,.!?।"“”]/g,' ').replace(/\s+/g,' ').trim(); }
 function splitWake(t){
@@ -725,14 +823,17 @@ function matchControl(c){
   c = c.replace(/\s+(please|ji)$/,'').trim();
   if (/^(?:turn )?auto(?:matic)? mode off$|^turn off auto(?:matic)? mode$|^(?:ऑटो|ऑटोमैटिक) मोड (?:बंद|ऑफ)$/.test(c)) return 'autoOff';
   if (/^(?:turn )?auto(?:matic)? mode on$|^turn on auto(?:matic)? mode$|^start auto(?:matic)? mode$|^(?:ऑटो|ऑटोमैटिक) मोड (?:चालू|ऑन)$/.test(c)) return 'autoOn';
-  if (/^(?:stop|stop listening|stop talking|stop speaking|be quiet|quiet|चुप|रुको|रुक जाओ|बंद करो)$/.test(c)) return 'stop';
-  if (/^(?:sleep mode|sleep mode on|sleep|go to sleep|सो जाओ|स्लीप मोड)$/.test(c)) return 'sleep';
-  if (/^(?:wake up|wakeup|उठो|जागो|वेक अप)$/.test(c)) return 'wake';
+  if (/^(?:stop|stop listening|stop talking|stop speaking|be quiet|quiet|चुप|रुको|रुक जाओ|बंद करो|થોભો|રોકો|બંધ કરો|থামো|থামুন)$/.test(c)) return 'stop';
+  if (/^(?:sleep mode|sleep mode on|sleep|go to sleep|सो जाओ|स्लीप मोड|સૂઈ જાઓ|ঘুমাও)$/.test(c)) return 'sleep';
+  if (/^(?:wake up|wakeup|उठो|जागो|वेक अप|જાગો|জাগো)$/.test(c)) return 'wake';
   return null;
 }
+/* Echo guard: true if (nearly) every word heard was just spoken by JARVIS itself */
 function isEcho(t){
-  if (!lastSpokenNorm || Date.now() - lastSpokenEnd > 1500 || t.length < 6) return false;   // only the echo tail right after speech
-  return lastSpokenNorm.includes(t);      // safety net: transcript is part of what JARVIS just said
+  if (!(speakingNow || Date.now() - lastSpokenEnd < 1500) || !spokenSet.size) return false;
+  const tk = t.split(' ').filter(Boolean); if (!tk.length) return false;
+  let hit = 0; for (const w of tk) if (spokenSet.has(w)) hit++;
+  return hit / tk.length >= 0.7;
 }
 
 /* ---- status chip + reactor state ---- */
@@ -744,7 +845,7 @@ function updateStatus(){
   else if (paused){ s = 'warn'; label = 'MIC PAUSED · TAP TO RESUME'; }
   else if (mode === 'sleep'){ s = 'sleep'; label = 'SLEEP · "JARVIS, WAKE UP"'; }
   else if (busy){ s = 'thinking'; label = 'THINKING'; }
-  else if (speakingNow){ s = 'speaking'; label = 'SPEAKING'; }
+  else if (speakingNow){ s = 'speaking'; label = duplexOK ? 'SPEAKING · SAY "JARVIS" TO INTERRUPT' : 'SPEAKING · MIC PAUSED'; }
   else if (ttsBlocked && !gestureSeen){ s = 'warn'; label = 'TAP ONCE FOR VOICE REPLIES'; }
   else if (recRunning && !muted){ if (mode === 'active'){ s = 'listening'; label = 'LISTENING'; } else { s = 'standby'; label = 'STANDBY · "HEY JARVIS"'; } }
   else { s = 'standby'; label = 'STARTING MIC…'; }
@@ -762,7 +863,7 @@ function armIdle(){
   if (mode !== 'active' || autoMode) return;
   idleTimer = setTimeout(() => {
     if (mode !== 'active' || autoMode) return;
-    if (busy || muted){ armIdle(); return; }
+    if (busy || muted || speakingNow){ armIdle(); return; }
     mode = 'standby'; updateStatus();
   }, CONFIG.IDLE_MS);
 }
@@ -786,16 +887,21 @@ function startRec(){
   if (!SR || !recWanted || muted || permDenied || recRunning || recStarting || document.hidden) return;
   clearTimeout(restartTimer);
   let r; try{ r = new SR(); }catch(e){ return; }
-  rec = r; r.lang = CONFIG.SPEECH_LANG[lang]; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+  rec = r; r.lang = curRecLocale; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
   let t0 = 0;
   r.onstart = () => { recStarting = false; recRunning = true; t0 = Date.now(); needGesture = false; updateStatus(); };
   r.onresult = e => {
-    if (muted) return;
+    if (muted) return;                    // only in the no-duplex fallback
     armIdle();
     for (let i = e.resultIndex; i < e.results.length; i++){
-      const res = e.results[i];
-      if (res.isFinal) handleTranscript(res[0].transcript);
-      else if (mode === 'active' && !busy) $('cmd').value = res[0].transcript;   // live caption while you talk
+      const res = e.results[i], txt = res[0].transcript, fin = res.isFinal, conf = res[0].confidence;
+      const gated = speakingNow || Date.now() - lastSpokenEnd < 700;
+      if (mode !== 'sleep' && (gated || busy || interrupting)){
+        if (onBargeIn(txt, fin)) continue;    // wake word heard while JARVIS talks / thinks → interrupt
+        if (gated) continue;                  // while JARVIS talks, nothing else is treated as input
+      }
+      if (fin) handleTranscript(txt, conf);
+      else if (mode === 'active' && !busy) $('cmd').value = txt;   // live caption while you talk
     }
   };
   r.onerror = e => {
@@ -805,7 +911,7 @@ function startRec(){
         else { permDenied = true; recWanted = false; showReply(L('Microphone is blocked. Allow mic access in your browser site settings, then reload.', 'माइक्रोफ़ोन ब्लॉक है। ब्राउज़र की साइट सेटिंग में अनुमति दें और पेज रीलोड करें।'), 'error'); }
         break;
       case 'audio-capture': giveUp(L('No microphone found.', 'माइक्रोफ़ोन नहीं मिला।')); break;
-      case 'language-not-supported': CONFIG.SPEECH_LANG[lang] = 'en-US'; break;
+      case 'language-not-supported': curRecLocale = curRecLocale === 'en-IN' ? 'en-US' : 'en-IN'; break;
       case 'network': REC.fastFails++; break;
       default: break;                     // 'no-speech' / 'aborted' are normal; onend handles restart
     }
@@ -815,6 +921,8 @@ function startRec(){
     const wasUp = t0 > 0;
     recStarting = false; recRunning = false;
     if (!wasUp || Date.now() - t0 < 1500) REC.fastFails++; else REC.fastFails = 0;
+    // Some phones kill the recognizer the moment text-to-speech starts. After 3 such drops, stop fighting it:
+    if (speakingNow && duplexOK && (!wasUp || Date.now() - t0 < 2500) && ++duplexFails >= 3) duplexOK = false;
     updateStatus();
     if (needGesture || permDenied) return;
     scheduleRestart();
@@ -823,8 +931,53 @@ function startRec(){
   catch(e){ recStarting = false; REC.fastFails++; scheduleRestart(); }
 }
 
+/* ---- voice interruption (barge-in) ---- */
+function doInterrupt(t){
+  if (busy) suppressStopMsg = true;
+  abortRequest();                         // cancel a pending backend request
+  cancelSpeech();                         // speechSynthesis.cancel() — stops speech immediately
+  lastSpokenEnd = Date.now();             // keep the echo guard on for the tail of the cut-off audio
+  mode = 'active'; clearIdle();
+  $('you').textContent = '› ' + t;
+  updateStatus();
+}
+function greetInterrupt(){
+  clearTimeout(greetTimer); clearTimeout(failTimer);
+  if (!interrupting) return;
+  interrupting = false; greetedAt = Date.now(); greetedText = lastWakeText;
+  activate(true, 'sir');                  // "Yes Sir, I am listening."
+}
+/* returns true if the transcript was consumed here */
+function onBargeIn(txt, isFinal){
+  const t = norm(txt); if (!t) return false;
+  if (isEcho(t)) return true;             // JARVIS hearing itself
+  const w = splitWake(t); if (!w.has) return false;
+  const hasCmd = w.rest.length > 1;
+  if (!hasCmd && Date.now() - greetedAt < 2500 && t === greetedText) return true;   // the final of the utterance we already answered
+  lastWakeText = t;
+  if (!interrupting){ interrupting = true; doInterrupt(t); }
+  clearTimeout(greetTimer);
+  if (hasCmd){                            // "Jarvis, what's the weather" — wait for the full sentence, no greeting
+    clearTimeout(failTimer);
+    if (isFinal){ interrupting = false; handleTranscript(txt, 1); }
+    else failTimer = setTimeout(greetInterrupt, 5000);
+    return true;
+  }
+  greetTimer = setTimeout(greetInterrupt, isFinal ? 0 : 700);    // wake word alone → greet once the user pauses
+  return true;
+}
+
 /* ---- transcript → wake word / control / conversation ---- */
-function handleTranscript(raw){
+function shaky(conf){                     // low-confidence speech → listen in the next language and ask again
+  if (!(conf > 0 && conf < 0.45)){ langProbe = 0; return false; }
+  const order = CONFIG.REC_ORDER;
+  if (++langProbe >= order.length){ langProbe = 0; return false; }
+  curRecLocale = order[(order.indexOf(curRecLocale) + 1) % order.length];
+  restartRec();
+  output(T('retry'), 'local');
+  return true;
+}
+function handleTranscript(raw, conf){
   const t = norm(raw); if (!t) return;
   const now = Date.now();
   if (t === lastFinal && now - lastFinalAt < 2000) return;       // duplicate finals (Android Chrome)
@@ -833,7 +986,7 @@ function handleTranscript(raw){
   const w = splitWake(t);
 
   if (mode === 'sleep'){                                          // only "Jarvis, wake up" works
-    if (w.has && /(^|\s)(wake ?up|उठो|जागो|वेक अप)(\s|$)/.test(t)){ $('you').textContent = '› ' + t; runControl('wake'); }
+    if (w.has && /(^|\s)(wake ?up|उठो|जागो|वेक अप|જાગો|জাগো)(\s|$)/.test(t)){ $('you').textContent = '› ' + t; runControl('wake'); }
     return;
   }
   const ctrl = (w.has || mode === 'active') ? matchControl(w.has ? w.rest : t) : null;
@@ -843,22 +996,21 @@ function handleTranscript(raw){
   if (mode === 'standby'){
     if (!w.has) return;                                           // ignore everything without the wake word
     $('you').textContent = '› ' + t;
-    if (w.rest.length > 1){ mode = 'active'; updateStatus(); submit(w.rest); }   // "Hey Jarvis, what's the weather in Delhi"
-    else activate(true);
+    if (w.rest.length > 1){ if (shaky(conf)) return; mode = 'active'; updateStatus(); submit(w.rest); }
+    else activate(true, 'boss');
     return;
   }
-  // active conversation
-  const text = w.has ? w.rest : raw.trim();
-  if (w.has && !text) return activate(true);
-  if (text.length > 1) submit(text);
+  const text = w.has ? w.rest : raw.trim();                       // active conversation
+  if (w.has && !text) return activate(true, 'boss');
+  if (text.length > 1){ if (shaky(conf)) return; submit(text); }
 }
-function activate(greet){
+function activate(greet, who){
   mode = 'active'; clearIdle(); updateStatus();
-  if (greet) output(L('Yes Boss, I am listening.', 'जी बॉस, मैं सुन रहा हूँ।'), 'local');
+  if (greet) output(T(who === 'sir' ? 'listenSir' : 'listenBoss'), 'local');
   armIdle();
 }
 function runControl(cmd){
-  clearIdle();
+  clearIdle(); clearTimeout(greetTimer); clearTimeout(failTimer); interrupting = false;
   switch (cmd){
     case 'stop':
       abortRequest(); stopSpeech(); autoMode = false; mode = 'standby';
@@ -874,7 +1026,7 @@ function runControl(cmd){
       abortRequest(); autoMode = false; mode = 'sleep'; updateStatus();
       output(L('Going to sleep mode. Say "Jarvis, wake up" to wake me.', 'स्लीप मोड में जा रहा हूँ। जगाने के लिए "Jarvis, wake up" कहें।'), 'local'); break;
     case 'wake':
-      activate(true); break;
+      activate(true, 'boss'); break;
   }
 }
 
@@ -884,6 +1036,7 @@ function onGesture(){
     gestureSeen = true; ttsBlocked = false;
     try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }catch(e){}   // unlock TTS (iOS / Chrome policy)
   }
+  if (greetPending){ greetPending = false; speak(GREETING); }
   if (SR && !permDenied && (needGesture || paused || !recWanted)){
     needGesture = false; paused = false; recWanted = true; REC.fastFails = 0; startRec();
   }
@@ -901,6 +1054,9 @@ function handlePerm(p){
   updateStatus();
 }
 async function initVoice(){
+  // Startup greeting (English). Browsers block speech until the user has touched the page once.
+  if (navigator.userActivation && navigator.userActivation.hasBeenActive) speak(GREETING);
+  else { greetPending = true; ttsBlocked = voiceOn; }
   if (!SR){
     showReply(L('Hands-free voice needs a browser with speech recognition (Chrome, Edge or Safari 14.1+). You can still type.', 'हैंड्स-फ्री वॉइस के लिए स्पीच रिकग्निशन वाला ब्राउज़र चाहिए (Chrome, Edge या Safari 14.1+)। आप टाइप कर सकते हैं।'), 'error');
     return updateStatus();
@@ -920,15 +1076,6 @@ $('send').onclick = () => submit($('cmd').value);
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit($('cmd').value); } });
 $('cmd').addEventListener('focus', stopSpeech);
 
-function refreshLangUI(){
-  $('langBtn').textContent = lang === 'hi' ? 'हि' : 'EN';
-  $('cmd').placeholder = lang === 'hi' ? 'संदेश लिखें…' : 'Message likho / Type a message…';
-}
-$('langBtn').onclick = () => {
-  lang = lang === 'en' ? 'hi' : 'en'; store.set('jarvis.lang', lang); refreshLangUI();
-  restartRec();
-  showReply(lang === 'hi' ? 'वॉइस भाषा: हिंदी' : 'Voice language: English', 'local');
-};
 function refreshSpkUI(){ $('spkBtn').classList.toggle('off', !voiceOn); $('spkBtn').style.opacity = voiceOn ? 1 : .55; }
 $('spkBtn').onclick = () => {
   voiceOn = !voiceOn; store.set('jarvis.voice', voiceOn ? 'on' : 'off'); if (!voiceOn) stopSpeech(); refreshSpkUI();
@@ -953,7 +1100,7 @@ $('sheet').onclick = e => { if (e.target === $('sheet')) $('sheet').classList.re
 $('clearBtn').onclick = () => { actions.clear(); $('sheet').classList.remove('open'); showReply(L('Conversation memory cleared.', 'बातचीत की मेमोरी साफ़ कर दी गई।'), 'local'); };
 
 /* ---------- boot ---------- */
-refreshLangUI(); refreshSpkUI();
+refreshSpkUI();
 updateNet(); updateRam(); ping(); initVoice();
 setInterval(updateRam, 3000);
 setInterval(ping, 10000);
