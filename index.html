@@ -67,7 +67,7 @@ main::-webkit-scrollbar{display:none}
 
 /* core */
 .core-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0;height:100%}
-.reactor{position:relative;flex:none;width:var(--rs);height:var(--rs);display:grid;place-items:center;cursor:pointer;margin-top:4px}
+.reactor{position:relative;flex:none;width:var(--rs);height:var(--rs);display:grid;place-items:center;margin-top:4px}
 .reactor::before{content:"";position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,rgba(31,139,255,.55),rgba(31,139,255,0) 68%);filter:blur(6px);animation:breathe 4s ease-in-out infinite}
 .ring{position:absolute;border-radius:50%;border:3px solid transparent}
 .r1{inset:0;border-top-color:var(--cyan);border-right-color:var(--cyan);animation:spin 7s linear infinite;box-shadow:0 0 14px rgba(0,229,212,.4)}
@@ -137,6 +137,26 @@ canvas#graph{width:100%;height:30px;display:block;margin-top:8px;border-radius:6
 @keyframes rot{to{transform:translateX(-50%)}}
 canvas.radar{background:#010b0d;display:block}
 
+/* voice status */
+.vstatus{flex:none;display:inline-flex;align-items:center;gap:7px;max-width:100%;font-family:'Orbitron';font-size:9.5px;letter-spacing:.06em;padding:3px 11px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--cyan)}
+.vstatus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vstatus i{width:7px;height:7px;border-radius:50%;background:var(--cyan);flex:none;opacity:.6}
+.vstatus[data-s="listening"]{color:#46f0a0;border-color:#1b7a52}
+.vstatus[data-s="listening"] i{background:#46f0a0;box-shadow:0 0 8px #46f0a0;opacity:1;animation:pulse2 1s infinite}
+.vstatus[data-s="thinking"]{color:var(--gold);border-color:#7a6420}
+.vstatus[data-s="thinking"] i{background:var(--gold);opacity:1;animation:pulse2 .7s infinite}
+.vstatus[data-s="speaking"]{color:#4aa8ff;border-color:#1b4f8a}
+.vstatus[data-s="speaking"] i{background:#4aa8ff;opacity:1;animation:pulse2 .6s infinite}
+.vstatus[data-s="sleep"]{color:#a79cf0;border-color:#4b4290}
+.vstatus[data-s="sleep"] i{background:#a79cf0}
+.vstatus[data-s="warn"]{color:var(--warn);border-color:#8a5a22}
+.vstatus[data-s="warn"] i{background:var(--warn);opacity:1}
+.vstatus[data-s="error"]{color:var(--err);border-color:#8a2a2a}
+.vstatus[data-s="error"] i{background:var(--err);opacity:1}
+@keyframes pulse2{50%{opacity:.25;transform:scale(.8)}}
+body.sleep .reactor{filter:grayscale(.75) brightness(.55)}
+body.sleep .reactor .ring{animation-duration:30s}
+
 /* dock */
 .dock{flex:none;display:flex;justify-content:space-around;align-items:center;height:54px;border-radius:999px;border:1px solid var(--line);background:rgba(2,16,20,.92);box-shadow:0 0 18px rgba(0,229,212,.15);max-width:520px;width:100%;margin:0 auto}
 .dock button{width:40px;height:40px;border-radius:50%;border:1px solid #0e4a63;background:rgba(31,139,255,.1);display:grid;place-items:center;color:#4aa8ff}
@@ -197,10 +217,11 @@ canvas.radar{background:#010b0d;display:block}
   <main id="main">
     <section class="a-core">
       <div class="core-wrap">
-        <div class="reactor" id="reactor" role="button" aria-label="Start listening">
+        <div class="reactor" id="reactor" aria-hidden="true">
           <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="ring r4"></div><div class="ring r5"></div>
           <div class="core">J.A.R.V.I.S</div>
         </div>
+        <div class="vstatus" id="vstatus" data-s="standby"><i></i><span id="vstatusTxt">STARTING…</span></div>
         <div class="you" id="you"></div>
         <div class="reply" id="reply" aria-live="polite">
           <div id="replyText">Online hoon, sir. Kya karna hai?<span class="cur"></span></div>
@@ -208,7 +229,6 @@ canvas.radar{background:#010b0d;display:block}
         </div>
         <div class="btns">
           <button class="btn" id="allBtn">ALL COMMANDS</button>
-          <button class="btn" id="listenBtn">START LISTENING</button>
         </div>
       </div>
     </section>
@@ -281,6 +301,14 @@ canvas.radar{background:#010b0d;display:block}
     <div class="cmd"><code>open google</code><span>Opens Google</span></div>
     <div class="cmd"><code>google search …</code><span>Google search</span></div>
     <div class="cmd"><code>clear chat</code><span>Reset AI memory</span></div>
+    <h4>VOICE (hands-free, no button)</h4>
+    <div class="cmd"><code>Hey Jarvis</code><span>Activate + conversation</span></div>
+    <div class="cmd"><code>Jarvis, Auto Mode On</code><span>Always-on conversation</span></div>
+    <div class="cmd"><code>Jarvis, Auto Mode Off</code><span>Back to wake-word</span></div>
+    <div class="cmd"><code>Jarvis, Stop</code><span>Stop voice + request</span></div>
+    <div class="cmd"><code>Jarvis, Sleep Mode</code><span>Ignore everything</span></div>
+    <div class="cmd"><code>Jarvis, Wake Up</code><span>Wake from sleep</span></div>
+    <p class="note">Mic sirf tab sunta hai jab page khula aur screen par ho. JARVIS bolte waqt mic band rehta hai (apni awaaz na sune), isliye bolte waqt "Stop" bolna kaam nahi karega — neeche ka stop button use karo.</p>
     <h4>AI (Aryan AI backend)</h4>
     <p class="note">Baaki sab kuch — sawaal, baatcheet, knowledge, math, search — Aryan AI ko jaata hai. Conversation history saath bheji jaati hai.</p>
     <h4>DATA LABELS</h4>
@@ -298,6 +326,7 @@ const CONFIG = {
   API_URL: 'https://aryan-ai-backend-v2.vercel.app/api/chat',
   PING_URL: 'https://aryan-ai-backend-v2.vercel.app/',
   TIMEOUT_MS: 45000,
+  IDLE_MS: 25000,                       // active conversation → standby after this much silence (Auto Mode off)
   MAX_HISTORY: 20,                      // messages sent as context
   DEFAULT_PLACE: { lat: 22.5726, lon: 88.3639, name: 'Kolkata (default)' },
   SPEECH_LANG: { en: 'en-IN', hi: 'hi-IN' },
@@ -344,7 +373,7 @@ function setBusy(b){
   busy = b;
   $('reactor').classList.toggle('thinking', b);
   $('send').disabled = b;
-  $('listenBtn').disabled = b;
+  updateStatus();
 }
 
 /* ---------- speech output (Hindi + English) ---------- */
@@ -356,33 +385,62 @@ function pickVoice(code){
   const norm = v => v.lang.replace('_','-').toLowerCase();
   return voices.find(v => norm(v) === c) || voices.find(v => norm(v).startsWith(c.slice(0,2))) || null;
 }
-let speakToken = 0;
-function stopSpeech(){
-  speakToken++;
+let speakToken = 0, speakingNow = false, muted = false, muteGen = 0, safetyTimer = null;
+let lastSpokenNorm = '', lastSpokenEnd = 0, ttsBlocked = false;
+
+/* Mic is fully stopped while JARVIS talks, and stays muted ~450 ms after, so it never hears itself. */
+function beginMute(){ muteGen++; muted = true; abortRec(); }
+function endMute(delay = 450){
+  const g = muteGen;
+  setTimeout(() => {
+    if (g !== muteGen) return;            // a newer speech started
+    muted = false; startRec(); armIdle(); updateStatus();
+  }, delay);
+}
+function cancelSpeech(){
+  speakToken++; clearTimeout(safetyTimer); speakingNow = false;
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   $('reactor').classList.remove('speaking');
 }
-function speak(text){
-  if (!voiceOn || !('speechSynthesis' in window)) return;
-  stopSpeech();
+function stopSpeech(){
+  const wasMuted = muted;
+  cancelSpeech();
+  if (wasMuted) endMute(150);
+  updateStatus();
+}
+function speak(text, done){
+  const finishNow = () => { if (done) setTimeout(done, 0); };
+  if (!voiceOn || !('speechSynthesis' in window)) return finishNow();
   const clean = text.replace(/```[\s\S]*?```/g,' ').replace(/https?:\/\/\S+/g,' link ')
     .replace(/[*_#`>~|]/g,'').replace(/\s+/g,' ').trim().slice(0, 2500);
-  if (!clean) return;
+  if (!clean) return finishNow();
+  cancelSpeech();
+  beginMute(); speakingNow = true;
+  lastSpokenNorm = norm(clean);
   const parts = clean.match(/[^.!?।\n]+[.!?।]?/g) || [clean];
   const chunks = []; let cur = '';
   parts.forEach(p => { if ((cur + p).length > 180 && cur){ chunks.push(cur); cur = p; } else cur += p; });
   if (cur.trim()) chunks.push(cur);
-  const token = ++speakToken;
+  const token = ++speakToken; let finished = false;
+  const finish = () => {
+    if (finished || token !== speakToken) return;
+    finished = true; clearTimeout(safetyTimer); speakingNow = false;
+    lastSpokenEnd = Date.now();
+    $('reactor').classList.remove('speaking');
+    endMute(450); updateStatus();
+    if (done) done();
+  };
+  safetyTimer = setTimeout(finish, clean.length * 95 + 6000);   // onend is unreliable on some mobile browsers
   chunks.forEach((c, i) => {
     const u = new SpeechSynthesisUtterance(c.trim());
     const code = /[\u0900-\u097F]/.test(c) ? CONFIG.SPEECH_LANG.hi : CONFIG.SPEECH_LANG.en;
     u.lang = code; const v = pickVoice(code); if (v) u.voice = v;
     if (i === 0) u.onstart = () => { if (token === speakToken) $('reactor').classList.add('speaking'); };
-    if (i === chunks.length - 1){
-      u.onend = u.onerror = () => { if (token === speakToken) $('reactor').classList.remove('speaking'); };
-    }
+    u.onerror = ev => { if (ev && ev.error === 'not-allowed') ttsBlocked = true; finish(); };
+    if (i === chunks.length - 1) u.onend = finish;
     speechSynthesis.speak(u);
   });
+  updateStatus();
 }
 function output(text, kind = 'ai', link = null){ showReply(text, kind, link); speak(text); }
 
@@ -572,8 +630,11 @@ function extractReply(json){
           : (json && typeof json.reply === 'string') ? json.reply : null;
   return r && r.trim() ? r.trim() : null;
 }
+let inflight = null, userAbort = false;
+function abortRequest(){ if (inflight){ userAbort = true; inflight.abort(); } }
 async function askBackend(text){
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), CONFIG.TIMEOUT_MS);
+  inflight = ctl; userAbort = false;
   try{
     const res = await fetch(CONFIG.API_URL, {
       method: 'POST',
@@ -592,9 +653,9 @@ async function askBackend(text){
     return reply;
   }catch(e){
     if (e && e.kind) throw e;
-    if (e && e.name === 'AbortError') throw { kind:'timeout' };
+    if (e && e.name === 'AbortError'){ if (userAbort){ userAbort = false; throw { kind:'cancelled' }; } throw { kind:'timeout' }; }
     throw { kind:'network' };
-  }finally{ clearTimeout(to); }
+  }finally{ clearTimeout(to); if (inflight === ctl) inflight = null; }
 }
 function errorText(e){
   if (!navigator.onLine) return L('You are offline. Check your internet connection.', 'आप ऑफ़लाइन हैं। इंटरनेट कनेक्शन जाँचें।');
@@ -612,6 +673,7 @@ async function submit(raw){
   if (!text) return;
   if (busy) return;                       // prevent duplicate requests
   stopSpeech();
+  clearIdle();
   $('cmd').value = '';
   $('you').textContent = '› ' + text;
 
@@ -621,7 +683,7 @@ async function submit(raw){
     try{
       const out = await actions[local[0]](local[1]);
       output(out.text, out.kind || 'local', out.link || null);
-    } finally { setBusy(false); }
+    } finally { setBusy(false); armIdle(); }
     return;
   }
 
@@ -632,59 +694,231 @@ async function submit(raw){
     history = history.slice(-CONFIG.MAX_HISTORY); saveHistory();
     output(reply, 'ai');
   }catch(e){
-    output(errorText(e), 'error');
-  }finally{ setBusy(false); }
+    if (e && e.kind === 'cancelled') showReply(L('Stopped.', 'रुक गया।'), 'local');
+    else output(errorText(e), 'error');
+  }finally{ setBusy(false); armIdle(); }
 }
 
-/* ---------- voice input ---------- */
+/* =========================================================
+   HANDS-FREE VOICE — wake word + continuous conversation
+   Browser Web Speech API: only works while the page is open
+   and visible. No always-on background listening.
+   ========================================================= */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-function resetListenUI(){
-  listening = false;
-  $('reactor').classList.remove('listening');
-  $('listenBtn').classList.remove('live');
-  $('listenBtn').textContent = 'START LISTENING';
+let mode = 'standby';                     // 'standby' (wake word only) | 'active' (conversation) | 'sleep'
+let autoMode = false;                     // true = stay in conversation, no idle timeout
+let recRunning = false, recStarting = false, recWanted = false;
+let permDenied = false, needGesture = false, paused = false, gestureSeen = false;
+let restartTimer = null, idleTimer = null, lastFinal = '', lastFinalAt = 0;
+const REC = { fastFails: 0, MAX_FAST: 6 };
+
+const WAKE = ['jarvis','jarvas','jarves','jarvish','jarwis','jaarvis','जार्विस','जारविस','जर्विस','जार्वीस','जारविज','जार्विज'];
+const WAKE_RE = new RegExp('(?:^|\\s)(?:hey |hi |ok |okay |hello |हे |हाय |ओके )?(' + WAKE.join('|') + ')(?=\\s|$)');
+function norm(s){ return s.toLowerCase().replace(/[,.!?।"“”]/g,' ').replace(/\s+/g,' ').trim(); }
+function splitWake(t){
+  const m = t.match(WAKE_RE);
+  if (!m) return { has:false, rest:t };
+  const rest = t.slice(m.index + m[0].length).trim().replace(/^(please|ji|sir|boss)\s+/,'').trim();
+  return { has:true, rest };
 }
-function toggleListen(){
-  if (listening){ rec && rec.stop(); return; }
-  if (busy) return;
-  stopSpeech();                           // stop AI voice when a new voice command starts
-  if (!SR) return showReply(L('Voice input is not supported in this browser. Try Chrome (Android/desktop) or Safari 14.1+.', 'इस ब्राउज़र में वॉइस इनपुट समर्थित नहीं है। Chrome या नया Safari आज़माएँ।'), 'error');
-  rec = new SR();
-  rec.lang = CONFIG.SPEECH_LANG[lang]; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
-  let finalText = '', heard = false;
-  rec.onstart = () => {
-    listening = true; $('reactor').classList.add('listening'); $('listenBtn').classList.add('live'); $('listenBtn').textContent = 'LISTENING…';
-    showReply(L('Listening…', 'सुन रहा हूँ…'), 'local');
+function matchControl(c){
+  c = c.replace(/\s+(please|ji)$/,'').trim();
+  if (/^(?:turn )?auto(?:matic)? mode off$|^turn off auto(?:matic)? mode$|^(?:ऑटो|ऑटोमैटिक) मोड (?:बंद|ऑफ)$/.test(c)) return 'autoOff';
+  if (/^(?:turn )?auto(?:matic)? mode on$|^turn on auto(?:matic)? mode$|^start auto(?:matic)? mode$|^(?:ऑटो|ऑटोमैटिक) मोड (?:चालू|ऑन)$/.test(c)) return 'autoOn';
+  if (/^(?:stop|stop listening|stop talking|stop speaking|be quiet|quiet|चुप|रुको|रुक जाओ|बंद करो)$/.test(c)) return 'stop';
+  if (/^(?:sleep mode|sleep mode on|sleep|go to sleep|सो जाओ|स्लीप मोड)$/.test(c)) return 'sleep';
+  if (/^(?:wake up|wakeup|उठो|जागो|वेक अप)$/.test(c)) return 'wake';
+  return null;
+}
+function isEcho(t){
+  if (!lastSpokenNorm || Date.now() - lastSpokenEnd > 1500 || t.length < 6) return false;   // only the echo tail right after speech
+  return lastSpokenNorm.includes(t);      // safety net: transcript is part of what JARVIS just said
+}
+
+/* ---- status chip + reactor state ---- */
+function updateStatus(){
+  let s, label;
+  if (!SR){ s = 'error'; label = 'VOICE NOT SUPPORTED'; }
+  else if (permDenied){ s = 'error'; label = 'MIC BLOCKED'; }
+  else if (needGesture){ s = 'warn'; label = 'TAP ANYWHERE TO ENABLE MIC'; }
+  else if (paused){ s = 'warn'; label = 'MIC PAUSED · TAP TO RESUME'; }
+  else if (mode === 'sleep'){ s = 'sleep'; label = 'SLEEP · "JARVIS, WAKE UP"'; }
+  else if (busy){ s = 'thinking'; label = 'THINKING'; }
+  else if (speakingNow){ s = 'speaking'; label = 'SPEAKING'; }
+  else if (ttsBlocked && !gestureSeen){ s = 'warn'; label = 'TAP ONCE FOR VOICE REPLIES'; }
+  else if (recRunning && !muted){ if (mode === 'active'){ s = 'listening'; label = 'LISTENING'; } else { s = 'standby'; label = 'STANDBY · "HEY JARVIS"'; } }
+  else { s = 'standby'; label = 'STARTING MIC…'; }
+  if (autoMode && mode === 'active' && ['listening','thinking','speaking'].includes(s)) label = 'AUTO · ' + label;
+  const v = $('vstatus'); v.dataset.s = s; $('vstatusTxt').textContent = label;
+  listening = s === 'listening';
+  $('reactor').classList.toggle('listening', listening);
+  document.body.classList.toggle('sleep', mode === 'sleep');
+}
+
+/* ---- idle timeout: conversation → standby (not in Auto Mode) ---- */
+function clearIdle(){ clearTimeout(idleTimer); }
+function armIdle(){
+  clearIdle();
+  if (mode !== 'active' || autoMode) return;
+  idleTimer = setTimeout(() => {
+    if (mode !== 'active' || autoMode) return;
+    if (busy || muted){ armIdle(); return; }
+    mode = 'standby'; updateStatus();
+  }, CONFIG.IDLE_MS);
+}
+
+/* ---- recognition engine with bounded restarts ---- */
+function abortRec(){ try{ rec && rec.abort(); }catch(e){} }
+function scheduleRestart(){
+  clearTimeout(restartTimer);
+  if (!recWanted || muted || document.hidden) return;
+  if (REC.fastFails >= REC.MAX_FAST) return giveUp(L('Microphone keeps stopping. Tap anywhere to resume.', 'माइक बार-बार बंद हो रहा है। फिर शुरू करने के लिए स्क्रीन पर टैप करें।'));
+  const delay = REC.fastFails ? Math.min(300 * Math.pow(2, REC.fastFails), 8000) : 250;
+  restartTimer = setTimeout(startRec, delay);
+}
+function giveUp(msg){
+  recWanted = false; paused = true; abortRec();
+  showReply(msg, 'error'); updateStatus();
+}
+function restartRec(){ abortRec(); clearTimeout(restartTimer); restartTimer = setTimeout(startRec, 300); }
+
+function startRec(){
+  if (!SR || !recWanted || muted || permDenied || recRunning || recStarting || document.hidden) return;
+  clearTimeout(restartTimer);
+  let r; try{ r = new SR(); }catch(e){ return; }
+  rec = r; r.lang = CONFIG.SPEECH_LANG[lang]; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+  let t0 = 0;
+  r.onstart = () => { recStarting = false; recRunning = true; t0 = Date.now(); needGesture = false; updateStatus(); };
+  r.onresult = e => {
+    if (muted) return;
+    armIdle();
+    for (let i = e.resultIndex; i < e.results.length; i++){
+      const res = e.results[i];
+      if (res.isFinal) handleTranscript(res[0].transcript);
+      else if (mode === 'active' && !busy) $('cmd').value = res[0].transcript;   // live caption while you talk
+    }
   };
-  rec.onresult = e => {
-    heard = true; let t = '';
-    for (let i = 0; i < e.results.length; i++){ t += e.results[i][0].transcript; if (e.results[i].isFinal) finalText = t; }
-    $('cmd').value = t;
+  r.onerror = e => {
+    switch (e.error){
+      case 'not-allowed': case 'service-not-allowed':
+        if (!gestureSeen){ needGesture = true; recWanted = true; }       // browser wants a tap first (iOS / autoplay policy)
+        else { permDenied = true; recWanted = false; showReply(L('Microphone is blocked. Allow mic access in your browser site settings, then reload.', 'माइक्रोफ़ोन ब्लॉक है। ब्राउज़र की साइट सेटिंग में अनुमति दें और पेज रीलोड करें।'), 'error'); }
+        break;
+      case 'audio-capture': giveUp(L('No microphone found.', 'माइक्रोफ़ोन नहीं मिला।')); break;
+      case 'language-not-supported': CONFIG.SPEECH_LANG[lang] = 'en-US'; break;
+      case 'network': REC.fastFails++; break;
+      default: break;                     // 'no-speech' / 'aborted' are normal; onend handles restart
+    }
+    updateStatus();
   };
-  rec.onerror = e => {
-    const msg = { 'not-allowed': L('Microphone permission denied. Allow mic access in browser settings.', 'माइक्रोफ़ोन की अनुमति नहीं मिली। ब्राउज़र सेटिंग में अनुमति दें।'),
-                  'service-not-allowed': L('Microphone permission denied. Allow mic access in browser settings.', 'माइक्रोफ़ोन की अनुमति नहीं मिली।'),
-                  'no-speech': L('I did not hear anything. Tap and try again.', 'कुछ सुनाई नहीं दिया। फिर से कोशिश करें।'),
-                  'audio-capture': L('No microphone found.', 'माइक्रोफ़ोन नहीं मिला।'),
-                  'network': L('Speech recognition needs an internet connection.', 'वॉइस पहचान के लिए इंटरनेट चाहिए।') }[e.error];
-    if (msg) showReply(msg, 'error');
-    heard = true; finalText = '';         // avoid duplicate error text in onend
+  r.onend = () => {
+    const wasUp = t0 > 0;
+    recStarting = false; recRunning = false;
+    if (!wasUp || Date.now() - t0 < 1500) REC.fastFails++; else REC.fastFails = 0;
+    updateStatus();
+    if (needGesture || permDenied) return;
+    scheduleRestart();
   };
-  rec.onend = () => {
-    resetListenUI();
-    const t = (finalText || $('cmd').value).trim();
-    if (t) submit(t);
-    else if (!heard) showReply(L('I did not hear anything. Tap and try again.', 'कुछ सुनाई नहीं दिया। फिर से कोशिश करें।'), 'error');
-  };
-  try{ rec.start(); }catch(e){ resetListenUI(); }
+  try{ recStarting = true; r.start(); }
+  catch(e){ recStarting = false; REC.fastFails++; scheduleRestart(); }
+}
+
+/* ---- transcript → wake word / control / conversation ---- */
+function handleTranscript(raw){
+  const t = norm(raw); if (!t) return;
+  const now = Date.now();
+  if (t === lastFinal && now - lastFinalAt < 2000) return;       // duplicate finals (Android Chrome)
+  lastFinal = t; lastFinalAt = now;
+  if (isEcho(t)) return;
+  const w = splitWake(t);
+
+  if (mode === 'sleep'){                                          // only "Jarvis, wake up" works
+    if (w.has && /(^|\s)(wake ?up|उठो|जागो|वेक अप)(\s|$)/.test(t)){ $('you').textContent = '› ' + t; runControl('wake'); }
+    return;
+  }
+  const ctrl = (w.has || mode === 'active') ? matchControl(w.has ? w.rest : t) : null;
+  if (ctrl){ $('you').textContent = '› ' + t; runControl(ctrl); return; }
+  if (busy) return;                                               // while thinking, only control commands count
+
+  if (mode === 'standby'){
+    if (!w.has) return;                                           // ignore everything without the wake word
+    $('you').textContent = '› ' + t;
+    if (w.rest.length > 1){ mode = 'active'; updateStatus(); submit(w.rest); }   // "Hey Jarvis, what's the weather in Delhi"
+    else activate(true);
+    return;
+  }
+  // active conversation
+  const text = w.has ? w.rest : raw.trim();
+  if (w.has && !text) return activate(true);
+  if (text.length > 1) submit(text);
+}
+function activate(greet){
+  mode = 'active'; clearIdle(); updateStatus();
+  if (greet) output(L('Yes Boss, I am listening.', 'जी बॉस, मैं सुन रहा हूँ।'), 'local');
+  armIdle();
+}
+function runControl(cmd){
+  clearIdle();
+  switch (cmd){
+    case 'stop':
+      abortRequest(); stopSpeech(); autoMode = false; mode = 'standby';
+      showReply(L('Stopped. Say "Hey Jarvis" to continue.', 'रुक गया। जारी रखने के लिए "Hey Jarvis" कहें।'), 'local');
+      updateStatus(); startRec(); break;
+    case 'autoOn':
+      autoMode = true; mode = 'active'; updateStatus();
+      output(L('Auto mode on. I am listening.', 'ऑटो मोड चालू। मैं सुन रहा हूँ।'), 'local'); break;
+    case 'autoOff':
+      autoMode = false; mode = 'standby'; updateStatus();
+      output(L('Auto mode off. Say "Hey Jarvis" when you need me.', 'ऑटो मोड बंद। ज़रूरत हो तो "Hey Jarvis" कहें।'), 'local'); break;
+    case 'sleep':
+      abortRequest(); autoMode = false; mode = 'sleep'; updateStatus();
+      output(L('Going to sleep mode. Say "Jarvis, wake up" to wake me.', 'स्लीप मोड में जा रहा हूँ। जगाने के लिए "Jarvis, wake up" कहें।'), 'local'); break;
+    case 'wake':
+      activate(true); break;
+  }
+}
+
+/* ---- startup, permission, gesture handling ---- */
+function onGesture(){
+  if (!gestureSeen){
+    gestureSeen = true; ttsBlocked = false;
+    try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }catch(e){}   // unlock TTS (iOS / Chrome policy)
+  }
+  if (SR && !permDenied && (needGesture || paused || !recWanted)){
+    needGesture = false; paused = false; recWanted = true; REC.fastFails = 0; startRec();
+  }
+  updateStatus();
+}
+['pointerdown','keydown','touchend'].forEach(ev => addEventListener(ev, onGesture, { capture:true, passive:true }));
+
+function handlePerm(p){
+  if (p.state === 'denied'){
+    permDenied = true; recWanted = false; abortRec();
+    showReply(L('Microphone is blocked. Allow mic access in your browser site settings.', 'माइक्रोफ़ोन ब्लॉक है। ब्राउज़र की साइट सेटिंग में अनुमति दें।'), 'error');
+  } else if (permDenied && p.state === 'granted'){
+    permDenied = false; recWanted = true; REC.fastFails = 0; startRec();
+  }
+  updateStatus();
+}
+async function initVoice(){
+  if (!SR){
+    showReply(L('Hands-free voice needs a browser with speech recognition (Chrome, Edge or Safari 14.1+). You can still type.', 'हैंड्स-फ्री वॉइस के लिए स्पीच रिकग्निशन वाला ब्राउज़र चाहिए (Chrome, Edge या Safari 14.1+)। आप टाइप कर सकते हैं।'), 'error');
+    return updateStatus();
+  }
+  recWanted = true;
+  try{
+    const p = await navigator.permissions.query({ name:'microphone' });
+    handlePerm(p); p.onchange = () => handlePerm(p);
+  }catch(e){}                              // Safari/Firefox: no mic permission query
+  if (!permDenied) startRec();
+  setTimeout(() => { if (!recRunning && !permDenied && !gestureSeen){ needGesture = true; updateStatus(); } }, 1500);
+  updateStatus();
 }
 
 /* ---------- UI wiring ---------- */
 $('send').onclick = () => submit($('cmd').value);
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit($('cmd').value); } });
 $('cmd').addEventListener('focus', stopSpeech);
-$('listenBtn').onclick = toggleListen;
-$('reactor').onclick = toggleListen;
 
 function refreshLangUI(){
   $('langBtn').textContent = lang === 'hi' ? 'हि' : 'EN';
@@ -692,7 +926,7 @@ function refreshLangUI(){
 }
 $('langBtn').onclick = () => {
   lang = lang === 'en' ? 'hi' : 'en'; store.set('jarvis.lang', lang); refreshLangUI();
-  if (listening && rec) rec.stop();
+  restartRec();
   showReply(lang === 'hi' ? 'वॉइस भाषा: हिंदी' : 'Voice language: English', 'local');
 };
 function refreshSpkUI(){ $('spkBtn').classList.toggle('off', !voiceOn); $('spkBtn').style.opacity = voiceOn ? 1 : .55; }
@@ -711,7 +945,7 @@ Object.keys(dockMap).forEach(id => $(id).onclick = async () => {
   setBusy(true);
   try{ const o = await actions[dockMap[id]](); output(o.text, o.kind || 'local'); } finally { setBusy(false); }
 });
-$('dStop').onclick = () => { stopSpeech(); if (listening && rec) rec.stop(); };
+$('dStop').onclick = () => runControl('stop');
 
 $('allBtn').onclick = () => $('sheet').classList.add('open');
 $('closeBtn').onclick = () => $('sheet').classList.remove('open');
@@ -720,10 +954,14 @@ $('clearBtn').onclick = () => { actions.clear(); $('sheet').classList.remove('op
 
 /* ---------- boot ---------- */
 refreshLangUI(); refreshSpkUI();
-updateNet(); updateRam(); ping();
+updateNet(); updateRam(); ping(); initVoice();
 setInterval(updateRam, 3000);
 setInterval(ping, 10000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden){ updateNet(); ping(); } });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden){ abortRec(); }                 // browsers cut the mic in background anyway
+  else { updateNet(); ping(); REC.fastFails = 0; startRec(); }
+  updateStatus();
+});
 addEventListener('resize', drawGraph);
 </script>
 </body>
