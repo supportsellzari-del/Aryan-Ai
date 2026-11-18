@@ -7,6 +7,27 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>J.A.R.V.I.S v2.0</title>
+
+<!-- Favicons -->
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+
+<!-- Apple -->
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120.png">
+<meta name="apple-mobile-web-app-title" content="JARVIS">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<!-- PWA / Chrome install -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Microsoft -->
+<meta name="msapplication-config" content="browserconfig.xml">
+<meta name="msapplication-TileColor" content="#01040b">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@500;600;700&display=swap" rel="stylesheet">
@@ -257,6 +278,7 @@ canvas.radar{display:block;background:#010b08;border:2px solid #25c55e;box-shado
   display:block;width:100%;height:44px;margin-top:12px;border-radius:14px;border:2px solid var(--blue2);
   background:rgba(31,139,255,.14);color:var(--cyan);font-family:var(--head);font-weight:700;font-size:.78rem;letter-spacing:.06em
 }
+.sbtn.install{border-color:var(--green);color:var(--green);background:rgba(57,224,122,.12)}
 
 /* ---------- responsive ---------- */
 @media (min-width:700px){
@@ -418,8 +440,11 @@ canvas.radar{display:block;background:#010b08;border:2px solid #25c55e;box-shado
     <p class="note">Core (gol reactor) ya status pill ko tap karo — J.A.R.V.I.S sunna shuru karega. Power button voice rok deta hai.</p>
     <h4>DOCK</h4>
     <p class="note">Schedule = date · Alarm = time · Tools = battery · Weather = mausam · Power = voice stop.</p>
+    <h4>INSTALL</h4>
+    <p class="note">Chrome mein menu (⋮) → <b>Install app</b> / <b>Add to Home screen</b>. Jab install available hoga, neeche hara INSTALL APP button bhi dikhega.</p>
     <h4>DATA LABELS</h4>
     <p class="note"><b style="color:var(--green)">LIVE</b> = real device / network measurement. <b style="color:var(--amber)">ANIMATION</b> = sirf visual effect, real data nahi. RAM: browser real device RAM usage nahi batata — sirf is tab ka JS memory dikhta hai (Chrome/Edge par), warna N/A.</p>
+    <button class="sbtn install" id="installBtn" style="display:none">INSTALL APP</button>
     <button class="sbtn" id="clearBtn">CLEAR CHAT MEMORY</button>
     <button class="sbtn" id="closeBtn">CLOSE</button>
   </div>
@@ -897,6 +922,30 @@ $('allBtn').onclick = () => $('sheet').classList.add('open');
 $('closeBtn').onclick = () => $('sheet').classList.remove('open');
 $('sheet').onclick = e => { if (e.target === $('sheet')) $('sheet').classList.remove('open'); };
 $('clearBtn').onclick = () => { actions.clear(); $('sheet').classList.remove('open'); showReply(L('Conversation memory cleared.', 'बातचीत की मेमोरी साफ़ कर दी गई।'), 'local'); };
+
+/* ---------- PWA: service worker + Install button (Chrome) ---------- */
+if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+  addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.warn('[JARVIS] SW register failed:', err)); });
+}
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();                     // we show our own INSTALL APP button
+  installEvt = e;
+  $('installBtn').style.display = 'block';
+});
+$('installBtn').onclick = async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  try{ await installEvt.userChoice; }catch(e){}
+  installEvt = null;
+  $('installBtn').style.display = 'none';
+  $('sheet').classList.remove('open');
+};
+addEventListener('appinstalled', () => {
+  installEvt = null;
+  $('installBtn').style.display = 'none';
+  showReply(L('App installed successfully.', 'ऐप सफलतापूर्वक इंस्टॉल हो गया।'), 'local');
+});
 
 /* ---------- boot ---------- */
 refreshLangUI(); refreshSpkUI(); refreshStatus();
