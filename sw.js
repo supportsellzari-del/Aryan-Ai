@@ -1,6 +1,6 @@
 /* J.A.R.V.I.S service worker — app shell cache so the installed app opens fast and works offline.
    AI replies, weather and ping always go to the network (never cached). */
-const VERSION = 'jarvis-v1';
+const VERSION = 'jarvis-v2';
 const SHELL = [
   './', 'index.html', 'manifest.json', 'favicon.ico',
   'icons/icon-192.png', 'icons/icon-512.png',
@@ -40,14 +40,11 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Icons / manifest / other same-origin files: cache first, refresh in background
+  // Icons / manifest / other same-origin files: network first (so new icons show up), cache when offline
   e.respondWith(
-    caches.match(req).then(hit => {
-      const net = fetch(req).then(res => {
-        if (res && res.ok){ const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
-        return res;
-      }).catch(() => hit);
-      return hit || net;
-    })
+    fetch(req).then(res => {
+      if (res && res.ok){ const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req))
   );
 });
