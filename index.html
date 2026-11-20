@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#020b12">
-<title>JARVIS AI V4</title>
-
-<style>
+<title>JARVIS AI V4</title><style>
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
@@ -219,52 +216,27 @@ main{
  #message{bottom:48px}
  .chat{bottom:4px}
 }
-</style>
-
-<script type="importmap">
+</style><script type="importmap">
 {
  "imports":{
   "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
   "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
  }
 }
-</script>
-</head>
-
-<body>
-<div class="app">
-
-<header>
+</script></head><body>
+<div class="app"><header>
  <div class="logo">JARVIS</div>
  <div class="status">● SYSTEM ONLINE</div>
-</header>
-
-<main>
- <section class="center">
-
-  <div class="ring"></div>
+</header><main>
+ <section class="center">  <div class="ring"></div>
   <div class="ring two"></div>
-  <div class="ring three"></div>
-
-  <div id="avatar"></div>
+  <div class="ring three"></div>  <div id="avatar"></div>
   <div class="scan"></div>
-  <div id="loader">INITIALIZING JARVIS...</div>
-
-  <div class="avatar-label">JARVIS AI ASSISTANT</div>
-
- </section>
-</main>
-
-<div id="message">Loading JARVIS...</div>
-
-<div class="chat">
+  <div id="loader">INITIALIZING JARVIS...</div>  <div class="avatar-label">JARVIS AI ASSISTANT</div> </section>
+</main><div id="message">Loading JARVIS...</div><div class="chat">
  <input id="chatInput" placeholder="Talk to JARVIS..." autocomplete="off">
  <button id="sendButton">SEND</button>
-</div>
-
-</div>
-
-<script type="module">
+</div></div><script type="module">
 import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {
@@ -303,11 +275,6 @@ scene.add(blueLight);
 let currentVRM=null;
 let headBone=null;
 
-let leftUpperArm=null;
-let rightUpperArm=null;
-let leftLowerArm=null;
-let rightLowerArm=null;
-
 let idleTime=0;
 let blinkTimer=0;
 let nextBlink=3;
@@ -327,8 +294,7 @@ resize();
 
 /*
  Align a bone's child direction with a desired
- world-space direction. This avoids guessing
- the model's local rotation axes.
+ world-space direction.
 */
 function alignBone(bone,child,targetDirection){
 
@@ -372,79 +338,113 @@ function alignBone(bone,child,targetDirection){
  bone.updateWorldMatrix(true,true);
 }
 
-/* NATURAL ARM POSITION */
+/*
+ JARVIS VISIBLE HANDS POSE
+ Arms are moved slightly outward and forward
+ so that hands do not hide behind the skirt.
+*/
 function setStandingPose(){
 
  if(!currentVRM)return;
 
  const h=currentVRM.humanoid;
 
- leftUpperArm=h.getNormalizedBoneNode("leftUpperArm");
- rightUpperArm=h.getNormalizedBoneNode("rightUpperArm");
+ const leftShoulder=h.getNormalizedBoneNode("leftShoulder");
+ const rightShoulder=h.getNormalizedBoneNode("rightShoulder");
 
- leftLowerArm=h.getNormalizedBoneNode("leftLowerArm");
- rightLowerArm=h.getNormalizedBoneNode("rightLowerArm");
+ const leftUpperArm=h.getNormalizedBoneNode("leftUpperArm");
+ const rightUpperArm=h.getNormalizedBoneNode("rightUpperArm");
+
+ const leftLowerArm=h.getNormalizedBoneNode("leftLowerArm");
+ const rightLowerArm=h.getNormalizedBoneNode("rightLowerArm");
 
  const leftHand=h.getNormalizedBoneNode("leftHand");
  const rightHand=h.getNormalizedBoneNode("rightHand");
 
- /*
-  Character's left and right are determined
-  from shoulder positions in world space.
- */
  currentVRM.scene.updateMatrixWorld(true);
 
- if(leftUpperArm && leftLowerArm){
+ function getSide(bone,fallback){
+  if(!bone)return fallback;
+
   const p=new THREE.Vector3();
-  leftUpperArm.getWorldPosition(p);
+  bone.getWorldPosition(p);
 
-  const sign=Math.sign(p.x)||-1;
+  return Math.sign(p.x)||fallback;
+ }
 
+ const leftSign=getSide(leftUpperArm,-1);
+ const rightSign=getSide(rightUpperArm,1);
+
+ // Shoulder alignment
+ if(leftShoulder && leftUpperArm){
+  alignBone(
+   leftShoulder,
+   leftUpperArm,
+   new THREE.Vector3(
+    leftSign*0.12,-0.99,0.04
+   )
+  );
+ }
+
+ if(rightShoulder && rightUpperArm){
+  alignBone(
+   rightShoulder,
+   rightUpperArm,
+   new THREE.Vector3(
+    rightSign*0.12,-0.99,0.04
+   )
+  );
+ }
+
+ currentVRM.scene.updateMatrixWorld(true);
+
+ // Upper arms: outward and slightly forward
+ if(leftUpperArm && leftLowerArm){
   alignBone(
    leftUpperArm,
    leftLowerArm,
-   new THREE.Vector3(sign*0.10,-0.99,0)
+   new THREE.Vector3(
+    leftSign*0.30,-0.93,0.20
+   )
   );
  }
 
  if(rightUpperArm && rightLowerArm){
-  const p=new THREE.Vector3();
-  rightUpperArm.getWorldPosition(p);
-
-  const sign=Math.sign(p.x)||1;
-
   alignBone(
    rightUpperArm,
    rightLowerArm,
-   new THREE.Vector3(sign*0.10,-0.99,0)
+   new THREE.Vector3(
+    rightSign*0.30,-0.93,0.20
+   )
   );
  }
 
+ currentVRM.scene.updateMatrixWorld(true);
+
+ // Forearms: hands move outside the skirt
  if(leftLowerArm && leftHand){
-  const p=new THREE.Vector3();
-  leftLowerArm.getWorldPosition(p);
-
-  const sign=Math.sign(p.x)||-1;
-
   alignBone(
    leftLowerArm,
    leftHand,
-   new THREE.Vector3(sign*0.04,-0.99,0)
+   new THREE.Vector3(
+    leftSign*0.20,-0.94,0.28
+   )
   );
  }
 
  if(rightLowerArm && rightHand){
-  const p=new THREE.Vector3();
-  rightLowerArm.getWorldPosition(p);
-
-  const sign=Math.sign(p.x)||1;
-
   alignBone(
    rightLowerArm,
    rightHand,
-   new THREE.Vector3(sign*0.04,-0.99,0)
+   new THREE.Vector3(
+    rightSign*0.20,-0.94,0.28
+   )
   );
  }
+
+ currentVRM.scene.updateMatrixWorld(true);
+
+ console.log("JARVIS Visible Hands Pose Applied");
 }
 
 /* LOAD VRM */
@@ -452,12 +452,8 @@ const gltfLoader=new GLTFLoader();
 
 gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
 
-/*
- If you renamed the file to jarvis.vrm,
- change the path below to:
- ./assets/models/jarvis.vrm
-*/
 const MODEL_PATH="./assets/models/viverse_avatar_model_217613.vrm";
+
 gltfLoader.load(
  MODEL_PATH,
 
@@ -480,7 +476,7 @@ gltfLoader.load(
 
   headBone=vrm.humanoid.getNormalizedBoneNode("head");
 
-  // First establish natural standing pose
+  // Apply visible hands pose
   setStandingPose();
 
   vrm.scene.updateMatrixWorld(true);
@@ -595,6 +591,5 @@ document.getElementById("chatInput")
  .addEventListener("keydown",e=>{
   if(e.key==="Enter")sendMessage();
  });
-</script>
-</body>
+</script></body>
 </html>
