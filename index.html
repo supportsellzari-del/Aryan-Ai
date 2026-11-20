@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JARVIS AI</title>
+<meta name="theme-color" content="#020a12">
+<title>JARVIS AI Assistant</title>
 
 <style>
 * {
@@ -13,114 +14,124 @@
 }
 
 body {
-    background: #02090e;
+    background: #020a12;
     color: #00eaff;
     font-family: Arial, sans-serif;
     overflow: hidden;
 }
 
 .app {
-    width: 100%;
     height: 100dvh;
+    width: 100%;
     position: relative;
     overflow: hidden;
     background:
-      radial-gradient(ellipse at center, #07303a 0%, #02090e 65%);
+      radial-gradient(ellipse at 50% 45%,
+      #06323b 0%, #03151e 40%, #02080e 100%);
 }
+
+/* Background */
+
+.grid {
+    position: absolute;
+    inset: 0;
+    opacity: .16;
+    background-image:
+      linear-gradient(#00eaff33 1px, transparent 1px),
+      linear-gradient(90deg,#00eaff33 1px,transparent 1px);
+    background-size: 45px 45px;
+    transform: perspective(500px) rotateX(15deg) scale(1.4);
+}
+
+.glow {
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: #00eaff18;
+    filter: blur(90px);
+    border-radius: 50%;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    pointer-events: none;
+}
+
+/* Header */
 
 header {
     height: 65px;
+    padding: 0 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 22px;
     border-bottom: 1px solid #00eaff55;
-    background: #03151dcc;
+    background: #020e17dd;
     position: relative;
-    z-index: 5;
+    z-index: 10;
 }
 
 .logo {
-    font-size: 23px;
+    font-size: 26px;
     font-weight: bold;
-    letter-spacing: 4px;
-    text-shadow: 0 0 15px #00eaff;
+    letter-spacing: 5px;
+    text-shadow: 0 0 20px #00eaff;
 }
 
 .status {
     font-size: 12px;
-    color: #00ff9d;
+    color: #00ffad;
 }
 
-main {
-    height: calc(100dvh - 65px);
-    display: grid;
-    grid-template-columns: 240px 1fr 240px;
-    position: relative;
-}
+/* Avatar Stage */
 
-.panel {
-    margin: 20px 12px;
-    padding: 18px;
-    border: 1px solid #00eaff55;
-    background: #03151d99;
-    box-shadow: 0 0 20px #00eaff12;
-    border-radius: 12px;
-    height: fit-content;
-    z-index: 2;
-}
-
-.panel h3 {
-    font-size: 13px;
-    margin-bottom: 18px;
-    letter-spacing: 2px;
-}
-
-.info {
-    font-size: 12px;
-    color: #8bcbd2;
-    line-height: 2.5;
-}
-
-.center {
-    position: relative;
+.stage {
+    position: absolute;
+    top: 65px;
+    bottom: 145px;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 0;
 }
 
 #avatar {
-    width: 100%;
-    height: 100%;
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 2;
 }
 
-.hologram {
+#avatar canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Hologram */
+
+.ring {
     position: absolute;
-    width: 280px;
-    height: 280px;
-    border: 1px solid #00eaff66;
+    width: min(75vw, 380px);
+    aspect-ratio: 1;
+    border: 1px solid #00eaff55;
     border-radius: 50%;
-    box-shadow: 0 0 35px #00eaff33,
-                inset 0 0 35px #00eaff22;
-    animation: rotate 12s linear infinite;
+    box-shadow:
+      0 0 35px #00eaff22,
+      inset 0 0 35px #00eaff22;
+    animation: rotate 18s linear infinite;
 }
 
-.hologram::before {
+.ring::before {
     content: "";
     position: absolute;
-    inset: 20px;
+    inset: 25px;
     border: 1px dashed #00eaff99;
     border-radius: 50%;
 }
 
-.hologram::after {
+.ring::after {
     content: "";
     position: absolute;
-    inset: 45px;
+    inset: 55px;
     border: 1px solid #00eaff55;
     border-radius: 50%;
 }
@@ -133,100 +144,180 @@ main {
     position: absolute;
     width: 100%;
     height: 2px;
-    background: #00eaff66;
+    background: #00eaff77;
     box-shadow: 0 0 15px #00eaff;
-    animation: scan 5s linear infinite;
+    animation: scanning 6s linear infinite;
     z-index: 3;
     pointer-events: none;
 }
 
-@keyframes scan {
-    0% { top: 10%; }
-    100% { top: 90%; }
+@keyframes scanning {
+    from { top: 10%; }
+    to { top: 90%; }
 }
+
+/* Avatar label */
 
 .avatar-label {
     position: absolute;
-    bottom: 75px;
-    z-index: 4;
+    bottom: 10px;
+    z-index: 5;
     text-align: center;
+    letter-spacing: 5px;
     font-size: 12px;
-    letter-spacing: 4px;
-    text-shadow: 0 0 12px #00eaff;
+    text-shadow: 0 0 15px #00eaff;
     pointer-events: none;
 }
 
-.chat {
+/* Information */
+
+.info {
     position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(600px, 90%);
+    top: 85px;
+    left: 15px;
+    z-index: 5;
+    font-size: 10px;
+    line-height: 2;
+    color: #71cbd4;
+    letter-spacing: 1px;
+    pointer-events: none;
+}
+
+.info.right {
+    left: auto;
+    right: 15px;
+    text-align: right;
+}
+
+/* Chat */
+
+.bottom {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 12px 18px 20px;
+    background: linear-gradient(transparent,#020a12 25%);
+    z-index: 10;
+}
+
+#message {
+    min-height: 28px;
+    text-align: center;
+    font-size: 14px;
+    color: #a2e8ed;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.chat {
     display: flex;
-    gap: 8px;
-    z-index: 6;
+    gap: 10px;
+    max-width: 750px;
+    margin: auto;
 }
 
 .chat input {
     flex: 1;
     min-width: 0;
-    padding: 15px;
-    background: #031b25;
-    border: 1px solid #00eaff88;
-    border-radius: 30px;
-    outline: none;
+    background: #031b26;
+    border: 1px solid #00eaff99;
+    border-radius: 35px;
+    padding: 17px;
     color: white;
+    font-size: 15px;
+    outline: none;
 }
 
 .chat button {
-    padding: 0 22px;
-    border: 1px solid #00eaff;
-    background: #003b49;
+    background: #003744;
     color: #00eaff;
-    border-radius: 30px;
-    cursor: pointer;
+    border: 1px solid #00eaff;
+    border-radius: 35px;
+    padding: 0 25px;
+    font-size: 14px;
+    font-weight: bold;
 }
 
-#message {
-    position: absolute;
-    bottom: 75px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #9cecf2;
-    font-size: 12px;
-    text-align: center;
-    width: 90%;
-    z-index: 5;
+.chat button:active {
+    background: #006477;
 }
 
-@media(max-width: 750px) {
-    main {
-        grid-template-columns: 1fr;
+/* Speaking Visualizer */
+
+.visualizer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    margin-bottom: 8px;
+}
+
+.visualizer span {
+    width: 3px;
+    height: 5px;
+    background: #00eaff;
+    border-radius: 5px;
+}
+
+.visualizer.active span {
+    animation: wave .5s infinite alternate;
+}
+
+.visualizer span:nth-child(2) {animation-delay:.1s}
+.visualizer span:nth-child(3) {animation-delay:.2s}
+.visualizer span:nth-child(4) {animation-delay:.3s}
+.visualizer span:nth-child(5) {animation-delay:.4s}
+
+@keyframes wave {
+    to { height: 20px; }
+}
+
+/* Mobile */
+
+@media(max-width:600px) {
+    .logo {
+        font-size: 23px;
     }
 
-    .panel {
-        display: none;
+    .stage {
+        bottom: 155px;
     }
 
-    .hologram {
-        width: 230px;
-        height: 230px;
+    .ring {
+        width: 72vw;
     }
 
-    .avatar-label {
+    .info {
+        font-size: 9px;
+        top: 25px;
+    }
+
+    .bottom {
+        padding: 10px 14px 18px;
+    }
+
+    .chat input {
+        padding: 15px;
+        font-size: 14px;
+    }
+
+    .chat button {
+        padding: 0 20px;
+    }
+}
+
+@media(max-height:550px) {
+    .stage {
         bottom: 100px;
     }
-}
 
-@media(max-height: 500px) {
-    .panel {
-        margin-top: 5px;
-        padding: 10px;
+    .ring {
+        width: 190px;
     }
 
-    .hologram {
-        width: 180px;
-        height: 180px;
+    .bottom {
+        padding: 5px 12px;
     }
 }
 </style>
@@ -236,69 +327,66 @@ main {
 
 <div class="app">
 
+<div class="grid"></div>
+<div class="glow"></div>
+
 <header>
     <div class="logo">JARVIS</div>
     <div class="status">● SYSTEM ONLINE</div>
 </header>
 
-<main>
+<div class="info">
+    AI CORE : ACTIVE<br>
+    AVATAR : 3D ONLINE<br>
+    MODE : ASSISTANT
+</div>
 
-    <section class="panel">
-        <h3>SYSTEM STATUS</h3>
-        <div class="info">
-            AI CORE : ONLINE<br>
-            AVATAR : LOADING<br>
-            VOICE : STANDBY<br>
-            NETWORK : CONNECTED<br>
-            SECURITY : ACTIVE
-        </div>
-    </section>
+<div class="info right">
+    SYSTEM V2.0<br>
+    HOLOGRAM : ACTIVE<br>
+    SECURITY : ON
+</div>
 
-    <section class="center">
+<main class="stage">
 
-        <div class="hologram"></div>
+    <div class="ring"></div>
 
-        <div id="avatar"></div>
+    <div id="avatar"></div>
 
-        <div class="scan"></div>
+    <div class="scan"></div>
 
-        <div class="avatar-label">
-            JARVIS AI ASSISTANT
-        </div>
-
-    </section>
-
-    <section class="panel">
-        <h3>AI INFORMATION</h3>
-        <div class="info">
-            PERSONAL AI<br>
-            3D AVATAR<br>
-            INTERFACE V1.0<br>
-            MODE : READY
-        </div>
-    </section>
+    <div class="avatar-label">
+        JARVIS AI ASSISTANT
+    </div>
 
 </main>
 
-<div id="message">
-    JARVIS Interface Ready — AI Connection Pending
+<div class="bottom">
+
+    <div class="visualizer" id="visualizer">
+        <span></span><span></span><span></span>
+        <span></span><span></span>
+    </div>
+
+    <div id="message">
+        Hello Sir! JARVIS is ready.
+    </div>
+
+    <div class="chat">
+        <input id="chatInput"
+        placeholder="Talk to JARVIS..."
+        autocomplete="off">
+
+        <button onclick="sendMessage()">SEND</button>
+    </div>
+
 </div>
-
-<div class="chat">
-    <input id="chatInput"
-           placeholder="Talk to JARVIS..."
-           autocomplete="off">
-
-    <button onclick="sendMessage()">SEND</button>
-</div>
-
 </div>
 
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
   }
 }
 </script>
@@ -307,12 +395,14 @@ main {
 
 import * as THREE from "three";
 
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { GLTFLoader } from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 
 import {
     VRMLoaderPlugin,
     VRMUtils
 } from "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js";
+
 
 const container = document.getElementById("avatar");
 
@@ -320,23 +410,18 @@ const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
     30,
-    container.clientWidth / container.clientHeight,
+    1,
     0.1,
     100
 );
-
-camera.position.set(0, 1.35, 3.5);
 
 const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true
 });
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-renderer.setSize(
-    container.clientWidth,
-    container.clientHeight
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
 );
 
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -345,30 +430,40 @@ container.appendChild(renderer.domElement);
 
 scene.add(new THREE.HemisphereLight(
     0xffffff,
-    0x335566,
+    0x334455,
     2
 ));
 
-const light = new THREE.DirectionalLight(0xffffff, 2);
+const light = new THREE.DirectionalLight(
+    0xffffff,
+    2.5
+);
 
-light.position.set(1, 2, 3);
-
+light.position.set(1, 3, 4);
 scene.add(light);
 
 let currentVRM = null;
+let headBone = null;
 
 const loader = new GLTFLoader();
 
-loader.register((parser) => {
-    return new VRMLoaderPlugin(parser);
-});
+loader.register(parser =>
+    new VRMLoaderPlugin(parser)
+);
+
+
+// Load Avatar
 
 loader.load(
-    "./assets/models/jarvis.vrm",
+    "./assets/models/viverse_avatar_model_202181.vrm",
 
     (gltf) => {
 
         const vrm = gltf.userData.vrm;
+
+        if (!vrm) {
+            throw new Error("VRM model not found");
+        }
 
         VRMUtils.removeUnnecessaryVertices(gltf.scene);
         VRMUtils.removeUnnecessaryJoints(gltf.scene);
@@ -377,11 +472,30 @@ loader.load(
 
         currentVRM = vrm;
 
-        // Face the camera
-        vrm.scene.rotation.y = Math.PI;
+        // Find head bone
+        headBone = vrm.humanoid.getNormalizedBoneNode("head");
 
-        // Position avatar
-        vrm.scene.position.set(0, -0.9, 0);
+        // Fit avatar automatically
+        const box = new THREE.Box3().setFromObject(vrm.scene);
+
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+
+        const height = size.y || 2;
+
+        const scale = 2.2 / height;
+
+        vrm.scene.scale.setScalar(scale);
+
+        vrm.scene.position.set(
+            -center.x * scale,
+            -box.min.y * scale,
+            -center.z * scale
+        );
+
+        camera.position.set(0, 1.05, 4.8);
+
+        camera.lookAt(0, 1.05, 0);
 
         document.getElementById("message").textContent =
             "JARVIS Avatar Successfully Loaded";
@@ -392,31 +506,18 @@ loader.load(
 
     (error) => {
 
-        console.error("VRM Loading Error:", error);
+        console.error("VRM Error:", error);
 
         document.getElementById("message").textContent =
-            "Avatar Loading Failed — Check VRM File Path";
+            "Avatar Error: Check Model File";
+
     }
 );
 
-const clock = new THREE.Clock();
 
-function animate() {
+// Resize
 
-    requestAnimationFrame(animate);
-
-    const delta = clock.getDelta();
-
-    if (currentVRM) {
-        currentVRM.update(delta);
-    }
-
-    renderer.render(scene, camera);
-}
-
-animate();
-
-window.addEventListener("resize", () => {
+function resize() {
 
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -426,31 +527,135 @@ window.addEventListener("resize", () => {
 
     renderer.setSize(width, height);
 
-});
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+
+// Animation
+
+const clock = new THREE.Clock();
+
+let blinkTimer = 0;
+let nextBlink = 3;
+let blinking = false;
+let blinkProgress = 0;
+
+function animate() {
+
+    requestAnimationFrame(animate);
+
+    const delta = Math.min(clock.getDelta(), 0.05);
+
+    if (currentVRM) {
+
+        const time = clock.elapsedTime;
+
+        // Natural head movement
+        if (headBone) {
+
+            headBone.rotation.y =
+                Math.sin(time * 0.65) * 0.045;
+
+            headBone.rotation.x =
+                Math.sin(time * 0.8) * 0.018;
+
+        }
+
+        // Eye blinking
+        const expressions = currentVRM.expressionManager;
+
+        if (expressions) {
+
+            blinkTimer += delta;
+
+            if (!blinking && blinkTimer >= nextBlink) {
+                blinking = true;
+                blinkProgress = 0;
+            }
+
+            if (blinking) {
+
+                blinkProgress += delta;
+
+                const blinkValue =
+                    Math.sin(Math.min(blinkProgress / 0.16, 1) * Math.PI);
+
+                expressions.setValue("blink", blinkValue);
+
+                if (blinkProgress >= 0.32) {
+
+                    expressions.setValue("blink", 0);
+
+                    blinking = false;
+                    blinkTimer = 0;
+
+                    nextBlink = 2.5 + Math.random() * 3;
+
+                }
+            }
+
+        }
+
+        currentVRM.update(delta);
+
+    }
+
+    renderer.render(scene, camera);
+
+}
+
+animate();
+
+
+// Lip Sync helper for future voice connection
+
+window.jarvisLipSync = function(value) {
+
+    if (!currentVRM || !currentVRM.expressionManager) return;
+
+    currentVRM.expressionManager.setValue(
+        "aa",
+        Math.max(0, Math.min(1, value))
+    );
+
+};
+
+window.jarvisStopLipSync = function() {
+    window.jarvisLipSync(0);
+};
 
 </script>
 
 <script>
+
+// Interface test
+
 function sendMessage() {
 
     const input = document.getElementById("chatInput");
 
-    if (!input.value.trim()) return;
+    const message = input.value.trim();
+
+    if (!message) return;
 
     document.getElementById("message").textContent =
-        "Chat API will be connected in the next development step.";
+        "Sir, AI Backend will be connected in the next step.";
 
     input.value = "";
+
 }
 
 document.getElementById("chatInput")
-.addEventListener("keydown", function(event) {
+.addEventListener("keydown", function(e) {
 
-    if (event.key === "Enter") {
+    if (e.key === "Enter") {
         sendMessage();
     }
 
 });
+
 </script>
 
 </body>
