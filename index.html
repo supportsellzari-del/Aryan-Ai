@@ -1,9 +1,12 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#020b12">
-<title>JARVIS AI V4</title><style>
+<title>JARVIS AI V5</title>
+
+<style>
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
@@ -216,29 +219,55 @@ main{
  #message{bottom:48px}
  .chat{bottom:4px}
 }
-</style><script type="importmap">
+</style>
+
+<script type="importmap">
 {
  "imports":{
   "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
   "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
  }
 }
-</script></head><body>
-<div class="app"><header>
+</script>
+</head>
+
+<body>
+<div class="app">
+
+<header>
  <div class="logo">JARVIS</div>
  <div class="status">● SYSTEM ONLINE</div>
-</header><main>
- <section class="center">  <div class="ring"></div>
+</header>
+
+<main>
+ <section class="center">
+
+  <div class="ring"></div>
   <div class="ring two"></div>
-  <div class="ring three"></div>  <div id="avatar"></div>
+  <div class="ring three"></div>
+
+  <div id="avatar"></div>
   <div class="scan"></div>
-  <div id="loader">INITIALIZING JARVIS...</div>  <div class="avatar-label">JARVIS AI ASSISTANT</div> </section>
-</main><div id="message">Loading JARVIS...</div><div class="chat">
+  <div id="loader">INITIALIZING JARVIS...</div>
+
+  <div class="avatar-label">JARVIS AI ASSISTANT</div>
+
+ </section>
+</main>
+
+<div id="message">Loading JARVIS...</div>
+
+<div class="chat">
  <input id="chatInput" placeholder="Talk to JARVIS..." autocomplete="off">
  <button id="sendButton">SEND</button>
-</div></div><script type="module">
+</div>
+
+</div>
+
+<script type="module">
 import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+
 import {
  VRMLoaderPlugin,
  VRMUtils
@@ -275,28 +304,40 @@ scene.add(blueLight);
 let currentVRM=null;
 let headBone=null;
 
+let leftHand=null;
+let rightHand=null;
+
 let idleTime=0;
 let blinkTimer=0;
 let nextBlink=3;
 let blinkDuration=0;
 
 function resize(){
+
  const w=container.clientWidth;
  const h=container.clientHeight;
 
  camera.aspect=w/h;
  camera.updateProjectionMatrix();
+
  renderer.setSize(w,h);
 }
 
 window.addEventListener("resize",resize);
 resize();
 
-/*
- Align a bone's child direction with a desired
- world-space direction.
-*/
-function alignBone(bone,child,targetDirection){
+
+/* ==========================================
+   JARVIS V5 - NATURAL HUMAN STANDING POSE
+========================================== */
+
+function getBone(name){
+
+ return currentVRM?.humanoid?.getNormalizedBoneNode(name) || null;
+
+}
+
+function alignBoneToDirection(bone,child,direction){
 
  if(!bone || !child)return;
 
@@ -308,146 +349,180 @@ function alignBone(bone,child,targetDirection){
  bone.getWorldPosition(bonePosition);
  child.getWorldPosition(childPosition);
 
- const currentDirection=
-  childPosition.sub(bonePosition).normalize();
+ const currentDirection=childPosition
+  .sub(bonePosition)
+  .normalize();
 
- const desiredDirection=
-  targetDirection.clone().normalize();
+ const desiredDirection=direction.clone().normalize();
 
- const correction=new THREE.Quaternion();
+ const correction=new THREE.Quaternion()
+  .setFromUnitVectors(currentDirection,desiredDirection);
 
- correction.setFromUnitVectors(
-  currentDirection,
-  desiredDirection
- );
-
- const worldQuaternion=bone.getWorldQuaternion(
+ const worldRotation=bone.getWorldQuaternion(
   new THREE.Quaternion()
  );
 
- correction.multiply(worldQuaternion);
+ const desiredWorldRotation=correction.multiply(worldRotation);
 
- const parentQuaternion=bone.parent
+ const parentRotation=bone.parent
   ?bone.parent.getWorldQuaternion(new THREE.Quaternion())
   :new THREE.Quaternion();
 
  bone.quaternion.copy(
-  parentQuaternion.invert().multiply(correction)
+  parentRotation.invert().multiply(desiredWorldRotation)
  );
 
  bone.updateWorldMatrix(true,true);
 }
 
-/*
- JARVIS VISIBLE HANDS POSE
- Arms are moved slightly outward and forward
- so that hands do not hide behind the skirt.
-*/
+
+function setFingerRelaxed(side){
+
+ const fingers=[
+  "ThumbProximal",
+  "ThumbIntermediate",
+  "ThumbDistal",
+
+  "IndexProximal",
+  "IndexIntermediate",
+  "IndexDistal",
+
+  "MiddleProximal",
+  "MiddleIntermediate",
+  "MiddleDistal",
+
+  "RingProximal",
+  "RingIntermediate",
+  "RingDistal",
+
+  "LittleProximal",
+  "LittleIntermediate",
+  "LittleDistal"
+ ];
+
+ fingers.forEach(part=>{
+
+  const bone=getBone(side+part);
+
+  if(!bone)return;
+
+  const isThumb=part.startsWith("Thumb");
+
+  bone.rotation.x+=isThumb?0.04:0.10;
+
+ });
+}
+
+
 function setStandingPose(){
 
  if(!currentVRM)return;
 
- const h=currentVRM.humanoid;
+ const leftShoulder=getBone("leftShoulder");
+ const rightShoulder=getBone("rightShoulder");
 
- const leftShoulder=h.getNormalizedBoneNode("leftShoulder");
- const rightShoulder=h.getNormalizedBoneNode("rightShoulder");
+ const leftUpperArm=getBone("leftUpperArm");
+ const rightUpperArm=getBone("rightUpperArm");
 
- const leftUpperArm=h.getNormalizedBoneNode("leftUpperArm");
- const rightUpperArm=h.getNormalizedBoneNode("rightUpperArm");
+ const leftLowerArm=getBone("leftLowerArm");
+ const rightLowerArm=getBone("rightLowerArm");
 
- const leftLowerArm=h.getNormalizedBoneNode("leftLowerArm");
- const rightLowerArm=h.getNormalizedBoneNode("rightLowerArm");
-
- const leftHand=h.getNormalizedBoneNode("leftHand");
- const rightHand=h.getNormalizedBoneNode("rightHand");
+ leftHand=getBone("leftHand");
+ rightHand=getBone("rightHand");
 
  currentVRM.scene.updateMatrixWorld(true);
 
- function getSide(bone,fallback){
-  if(!bone)return fallback;
+ /* SHOULDER POSITION */
 
-  const p=new THREE.Vector3();
-  bone.getWorldPosition(p);
-
-  return Math.sign(p.x)||fallback;
- }
-
- const leftSign=getSide(leftUpperArm,-1);
- const rightSign=getSide(rightUpperArm,1);
-
- // Shoulder alignment
  if(leftShoulder && leftUpperArm){
-  alignBone(
+
+  alignBoneToDirection(
    leftShoulder,
    leftUpperArm,
-   new THREE.Vector3(
-    leftSign*0.12,-0.99,0.04
-   )
+   new THREE.Vector3(-0.05,-1,0)
   );
+
  }
 
  if(rightShoulder && rightUpperArm){
-  alignBone(
+
+  alignBoneToDirection(
    rightShoulder,
    rightUpperArm,
-   new THREE.Vector3(
-    rightSign*0.12,-0.99,0.04
-   )
+   new THREE.Vector3(0.05,-1,0)
   );
+
  }
 
  currentVRM.scene.updateMatrixWorld(true);
 
- // Upper arms: outward and slightly forward
+
+ /* UPPER ARMS */
+
  if(leftUpperArm && leftLowerArm){
-  alignBone(
+
+  alignBoneToDirection(
    leftUpperArm,
    leftLowerArm,
-   new THREE.Vector3(
-    leftSign*0.30,-0.93,0.20
-   )
+   new THREE.Vector3(-0.22,-0.96,0.10)
   );
+
  }
 
  if(rightUpperArm && rightLowerArm){
-  alignBone(
+
+  alignBoneToDirection(
    rightUpperArm,
    rightLowerArm,
-   new THREE.Vector3(
-    rightSign*0.30,-0.93,0.20
-   )
+   new THREE.Vector3(0.22,-0.96,0.10)
   );
+
  }
 
  currentVRM.scene.updateMatrixWorld(true);
 
- // Forearms: hands move outside the skirt
+
+ /* FOREARMS */
+
  if(leftLowerArm && leftHand){
-  alignBone(
+
+  alignBoneToDirection(
    leftLowerArm,
    leftHand,
-   new THREE.Vector3(
-    leftSign*0.20,-0.94,0.28
-   )
+   new THREE.Vector3(-0.12,-0.98,0.12)
   );
+
  }
 
  if(rightLowerArm && rightHand){
-  alignBone(
+
+  alignBoneToDirection(
    rightLowerArm,
    rightHand,
-   new THREE.Vector3(
-    rightSign*0.20,-0.94,0.28
-   )
+   new THREE.Vector3(0.12,-0.98,0.12)
   );
+
  }
 
  currentVRM.scene.updateMatrixWorld(true);
 
- console.log("JARVIS Visible Hands Pose Applied");
+
+ /* RELAXED FINGERS */
+
+ setFingerRelaxed("left");
+ setFingerRelaxed("right");
+
+ currentVRM.scene.updateMatrixWorld(true);
+
+ console.log("JARVIS Natural Standing Pose Applied");
+
 }
 
-/* LOAD VRM */
+
+/* ==========================================
+   LOAD VRM CHARACTER
+========================================== */
+
 const gltfLoader=new GLTFLoader();
 
 gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
@@ -455,6 +530,7 @@ gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
 const MODEL_PATH="./assets/models/viverse_avatar_model_217613.vrm";
 
 gltfLoader.load(
+
  MODEL_PATH,
 
  gltf=>{
@@ -462,67 +538,113 @@ gltfLoader.load(
   const vrm=gltf.userData.vrm;
 
   if(!vrm){
+
    loaderText.textContent="VRM DATA NOT FOUND";
    return;
+
   }
 
   VRMUtils.removeUnnecessaryVertices(gltf.scene);
   VRMUtils.removeUnnecessaryJoints(gltf.scene);
 
   scene.add(vrm.scene);
+
   currentVRM=vrm;
 
   vrm.scene.rotation.y=Math.PI;
 
   headBone=vrm.humanoid.getNormalizedBoneNode("head");
 
-  // Apply visible hands pose
+
+  /* APPLY NATURAL STANDING POSE */
+
   setStandingPose();
+
+  requestAnimationFrame(()=>{
+
+   setStandingPose();
+
+  });
+
 
   vrm.scene.updateMatrixWorld(true);
 
-  // Fit avatar inside screen
+
+  /* FIT AVATAR INSIDE SCREEN */
+
   const box=new THREE.Box3().setFromObject(vrm.scene);
+
   const size=box.getSize(new THREE.Vector3());
+
   const center=box.getCenter(new THREE.Vector3());
 
   const verticalDistance=
-   (size.y/2)/Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+   (size.y/2)/Math.tan(
+    THREE.MathUtils.degToRad(camera.fov/2)
+   );
 
   const horizontalFov=
    2*Math.atan(
-    Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect
+    Math.tan(
+     THREE.MathUtils.degToRad(camera.fov/2)
+    )*camera.aspect
    );
 
   const horizontalDistance=
    (size.x/2)/Math.tan(horizontalFov/2);
 
-  const distance=Math.max(verticalDistance,horizontalDistance)*1.25;
+  const distance=Math.max(
+   verticalDistance,
+   horizontalDistance
+  )*1.25;
 
-  camera.position.set(center.x,center.y,center.z+distance);
+  camera.position.set(
+   center.x,
+   center.y,
+   center.z+distance
+  );
+
   camera.lookAt(center);
 
   loaderText.style.display="none";
+
   message.textContent="JARVIS Avatar Successfully Loaded";
 
   console.log("JARVIS VRM Loaded",vrm);
+
  },
 
  progress=>{
+
   if(progress.total>0){
-   const percent=Math.round(progress.loaded/progress.total*100);
+
+   const percent=Math.round(
+    progress.loaded/progress.total*100
+   );
+
    loaderText.textContent="LOADING AVATAR "+percent+"%";
+
   }
+
  },
 
  error=>{
+
   console.error(error);
+
   loaderText.textContent="AVATAR LOAD ERROR";
+
   message.textContent="Check VRM file path and internet connection.";
+
  }
+
 );
 
-/* ANIMATION */
+
+/* ==========================================
+   ANIMATION
+========================================== */
+
 const clock=new THREE.Clock();
 
 function animate(){
@@ -537,43 +659,60 @@ function animate(){
   blinkTimer+=delta;
 
   if(headBone){
+
    headBone.rotation.y=Math.sin(idleTime*.7)*.025;
    headBone.rotation.x=Math.sin(idleTime*.5)*.015;
+
   }
 
   if(blinkTimer>=nextBlink){
+
    blinkDuration=.18;
    blinkTimer=0;
    nextBlink=2.5+Math.random()*3;
+
   }
 
   let blinkValue=0;
 
   if(blinkDuration>0){
+
    const progress=(.18-blinkDuration)/.18;
+
    blinkValue=Math.sin(progress*Math.PI);
+
    blinkDuration-=delta;
+
   }
 
   if(currentVRM.expressionManager){
+
    currentVRM.expressionManager.setValue(
     "blink",
     Math.max(0,blinkValue)
    );
+
   }
 
   currentVRM.update(delta);
+
  }
 
  renderer.render(scene,camera);
+
 }
 
 animate();
 
-/* TEMPORARY CHAT */
+
+/* ==========================================
+   TEMPORARY CHAT
+========================================== */
+
 function sendMessage(){
 
  const input=document.getElementById("chatInput");
+
  const value=input.value.trim();
 
  if(!value)return;
@@ -582,6 +721,7 @@ function sendMessage(){
   "JARVIS Backend connection will be added in the next step.";
 
  input.value="";
+
 }
 
 document.getElementById("sendButton")
@@ -589,7 +729,11 @@ document.getElementById("sendButton")
 
 document.getElementById("chatInput")
  .addEventListener("keydown",e=>{
+
   if(e.key==="Enter")sendMessage();
+
  });
-</script></body>
+
+</script>
+</body>
 </html>
