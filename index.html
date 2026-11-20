@@ -31,26 +31,58 @@ html,body{height:100%;overflow:hidden;background:#01040b;color:var(--text);font-
 @keyframes gridmove{to{background-position:0 60px}}
 #scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
 canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-/* ---- minimal UI ---- */
-#cap{position:fixed;left:0;right:0;bottom:calc(76px + var(--sb));padding:0 16px;display:flex;justify-content:center;pointer-events:none}
-#capBox{max-width:620px;max-height:22dvh;overflow-y:auto;pointer-events:auto;padding:10px 16px;border-radius:18px;
-  background:rgba(2,10,28,.62);border:1px solid rgba(26,120,255,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  font-size:1.02rem;font-weight:600;line-height:1.4;color:var(--cyan);text-align:center;overflow-wrap:anywhere;white-space:pre-wrap;transition:opacity .5s}
-#capBox.hide{opacity:0}#capBox.error{color:var(--err)}#capBox a{color:var(--gold)}
-#bar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + var(--sb));display:flex;justify-content:center;gap:8px}
-#barIn{width:100%;max-width:620px;display:flex;gap:8px;align-items:center}
-#cmd{flex:1;min-width:0;height:46px;padding:0 16px;border-radius:23px;border:1.5px solid var(--blue);background:rgba(2,10,28,.7);
-  color:var(--text);font:500 1rem 'Exo 2',sans-serif;outline:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#cmd:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(25,211,255,.45)}
-.ib{width:46px;height:46px;flex:none;border-radius:50%;border:1.5px solid var(--blue);background:rgba(2,10,28,.7);color:var(--cyan);
-  display:grid;place-items:center;font:700 .8rem Orbitron,sans-serif;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.ib.off{opacity:.5}.ib.on{border-color:#00e5d4;color:#00e5d4;box-shadow:0 0 16px rgba(0,229,212,.7);animation:pl 1s infinite}
-@keyframes pl{50%{transform:scale(1.1)}}
+canvas#gl{z-index:1}#scan{z-index:2}
+#stage{position:fixed;left:50%;bottom:calc(120px + var(--sb));width:min(150vw,980px);height:300px;z-index:0;pointer-events:none;
+  transform:translateX(-50%) perspective(520px) rotateX(68deg);
+  background:repeating-radial-gradient(circle at 50% 50%,transparent 0 26px,rgba(25,211,255,.6) 27px 29px,transparent 30px 58px);
+  -webkit-mask-image:radial-gradient(circle,#000 25%,transparent 70%);mask-image:radial-gradient(circle,#000 25%,transparent 70%)}
+.hud{position:fixed;z-index:5;background:linear-gradient(180deg,rgba(6,36,84,.64),rgba(2,10,28,.9));border:1.5px solid var(--blue);border-radius:20px;
+  box-shadow:0 0 14px rgba(31,139,255,.5),inset 0 0 18px rgba(31,139,255,.15);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.logo{width:46px;height:46px;border-radius:50%;flex:none;position:relative;border:2px solid var(--cyan);
+  background:conic-gradient(#1a78ff,#19d3ff,#0a2a6a,#1a78ff);box-shadow:0 0 14px rgba(25,211,255,.7)}
+.logo::after{content:"";position:absolute;inset:9px;border-radius:50%;background:#01040b;border:2px solid var(--cyan)}
+.logo.s{width:36px;height:36px}.logo.s::after{inset:7px}
+.talk .logo{animation:sp 3s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+#brand{left:10px;top:calc(10px + var(--st));display:flex;align-items:center;gap:10px;padding:8px 18px 8px 8px;border-radius:30px;width:min(52vw,230px)}
+.bn{font:700 1.15rem Orbitron,sans-serif;letter-spacing:.04em}
+.onl{display:flex;align-items:center;gap:6px;font:700 .85rem 'Exo 2',sans-serif;color:#39e07a}
+.onl i{width:10px;height:10px;border-radius:50%;background:#39e07a;box-shadow:0 0 10px #39e07a}
+#bubble{right:10px;top:calc(10px + var(--st));display:flex;align-items:center;gap:8px;padding:9px 14px;max-width:44vw;border-radius:20px 20px 20px 4px}
+#state{font:600 .85rem/1.25 'Exo 2',sans-serif;color:var(--text)}
+#menu{position:fixed;z-index:5;left:10px;top:calc(88px + var(--st));display:flex;flex-direction:column;gap:7px}
+.mb{display:flex;align-items:center;gap:8px;height:38px;width:112px;padding:0 10px;border-radius:14px;border:1.5px solid var(--blue);cursor:pointer;
+  background:linear-gradient(180deg,rgba(6,36,84,.64),rgba(2,10,28,.9));color:var(--text);font:600 .82rem 'Exo 2',sans-serif;
+  box-shadow:0 0 10px rgba(31,139,255,.45),inset 0 0 10px rgba(31,139,255,.15)}
+.mb svg{width:20px;height:20px;flex:none;stroke:var(--cyan);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mb:active{transform:scale(.96)}
+#wCard{display:none;right:10px;top:calc(98px + var(--st));width:min(44vw,220px);padding:10px 12px;border-radius:18px}
+#wCard.show{display:block}@media(min-width:700px){#wCard{display:block}}
+#wCity{font:700 .78rem Orbitron,sans-serif;letter-spacing:.03em;padding-bottom:6px;border-bottom:1px solid rgba(25,211,255,.5)}
+.wt{display:flex;align-items:center;gap:8px;margin:6px 0}.wt svg{width:42px;height:42px;stroke:var(--cyan);fill:rgba(160,210,255,.25);stroke-width:1.5}
+.wt b{font:700 2.2rem Orbitron,sans-serif;line-height:1}.wt sup{font-size:.9rem;font-weight:600}
+#wCond{font:600 1rem 'Exo 2',sans-serif;margin-bottom:6px}
+.wr{display:flex;justify-content:space-between;font:500 .8rem 'Exo 2',sans-serif;padding:4px 0;border-top:1px solid rgba(26,120,255,.4);color:var(--dim)}.wr b{color:var(--text);font-weight:600}
+#bottom{position:fixed;z-index:5;left:50%;transform:translateX(-50%);width:min(100%,620px);bottom:0;padding:0 12px calc(8px + var(--sb));display:flex;flex-direction:column;gap:8px}
+#bottom .hud{position:relative}
+#uBub{border-radius:24px;padding:0 6px 0 16px;height:46px;display:flex;align-items:center}
+#cmd{flex:1;min-width:0;height:100%;background:none;border:0;outline:0;color:var(--text);font:600 1rem 'Exo 2',sans-serif}
+#cmd:disabled{opacity:1;-webkit-text-fill-color:var(--text)}
+#rBub{border-radius:26px;padding:8px 16px 8px 10px;display:flex;align-items:center;gap:10px;min-height:56px}
+#capBox{flex:1;min-width:0;max-height:20dvh;overflow-y:auto;scrollbar-width:thin;font:600 1rem/1.35 'Exo 2',sans-serif;color:var(--text);overflow-wrap:anywhere;white-space:pre-wrap}
+#capBox.error{color:var(--err)}#capBox a{color:var(--gold)}
+.wv{display:flex;align-items:center;gap:3px;height:26px;flex:none}.wv.big{width:64px;justify-content:center}
+.wv i{width:3px;height:22%;border-radius:2px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);animation:wv .9s ease-in-out infinite;animation-play-state:paused}
+.talk .wv i{animation-play-state:running}@keyframes wv{50%{height:100%}}
+#dock{border-radius:36px;display:flex;justify-content:space-between;align-items:center;padding:8px 14px}
+.ib{width:46px;height:46px;flex:none;border-radius:50%;border:1.5px solid var(--blue);background:radial-gradient(circle,rgba(31,139,255,.28),rgba(2,10,28,.9));color:var(--cyan);
+  display:grid;place-items:center;cursor:pointer;position:relative;box-shadow:0 0 10px rgba(31,139,255,.5)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ib.off{opacity:.45}.ib.mic{width:66px;height:66px;border:2px solid var(--cyan);box-shadow:0 0 20px rgba(25,211,255,.8)}.ib.mic svg{width:30px;height:30px}
+.ib.on{border-color:#00e5d4;color:#00e5d4;box-shadow:0 0 22px rgba(0,229,212,.9);animation:pl 1s infinite}@keyframes pl{50%{transform:scale(1.1)}}
+#langTag{position:absolute;right:-3px;bottom:-3px;font:700 .55rem Orbitron,sans-serif;background:#01040b;border:1px solid var(--blue);border-radius:8px;padding:1px 4px}
 button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
-#state{position:fixed;top:calc(10px + var(--st));left:0;right:0;text-align:center;font:700 .72rem Orbitron,sans-serif;letter-spacing:.08em;color:var(--dim);pointer-events:none;text-shadow:0 0 8px rgba(25,211,255,.6)}
-#load{position:fixed;inset:0;display:grid;place-items:center;font:700 .9rem Orbitron,sans-serif;color:var(--cyan);letter-spacing:.1em;pointer-events:none;transition:opacity .6s}
-@media (prefers-reduced-motion:reduce){#grid{animation:none}}
+#load{position:fixed;inset:0;z-index:6;display:grid;place-items:center;font:700 .9rem Orbitron,sans-serif;color:var(--cyan);letter-spacing:.1em;pointer-events:none;transition:opacity .6s}
+@media (prefers-reduced-motion:reduce){#grid,.wv i,.logo{animation:none!important}}
 </style>
 <script type="importmap">
 {"imports":{
@@ -63,15 +95,33 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-o
 <div id="bg"></div><div id="grid"></div>
 <canvas id="gl"></canvas>
 <div id="scan"></div>
-<div id="state">STANDBY · TAP TO WAKE</div>
+<div id="stage"></div>
+<div class="hud" id="brand"><div class="logo"></div><div><div class="bn">JARVIS</div><div class="onl"><i></i>Online</div></div></div>
+<div class="hud" id="bubble"><div class="wv" data-n="7"></div><span id="state">Say “Hello Jarvis” or tap the mic</span></div>
+<nav id="menu">
+<button class="mb" data-q="weather"><svg viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.5 1.5A3.8 3.8 0 0 0 6.5 19z"/></svg>Weather</button>
+<button class="mb" data-q="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search</button>
+<button class="mb" data-q="youtube"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4" fill="#e62117" stroke="none"/><path d="M10 9l5 3-5 3z" fill="#fff" stroke="none"/></svg>YouTube</button>
+<button class="mb" data-q="system"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>System</button>
+<button class="mb" data-q="battery"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="15" height="10" rx="2" fill="#39e07a" stroke="#39e07a"/><path d="M21 11v2"/></svg>Battery</button>
+<button class="mb" data-q="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>More</button>
+</nav>
+<div class="hud" id="wCard"><div id="wCity">WEATHER</div>
+<div class="wt"><svg viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.5 1.5A3.8 3.8 0 0 0 6.5 19z"/></svg><b><span id="wTemp">--</span><sup>°C</sup></b></div>
+<div id="wCond">--</div>
+<div class="wr">Humidity <b id="wHum">--</b></div><div class="wr">Wind Speed <b id="wWind">--</b></div><div class="wr">Feels Like <b id="wFeel">--</b></div></div>
 <div id="load">LOADING AVATAR…</div>
-<div id="cap"><div id="capBox" class="hide"><span id="capTxt"></span><div id="capLink"></div></div></div>
-<div id="bar"><div id="barIn">
-  <button class="ib" id="langBtn" aria-label="Language">EN</button>
-  <input id="cmd" type="text" placeholder="Type a message…" autocomplete="off" enterkeyhint="send" aria-label="Message">
-  <button class="ib" id="spkBtn" aria-label="Voice output"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
-  <button class="ib" id="mic" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-</div></div>
+<div id="bottom">
+ <div class="hud" id="uBub"><input id="cmd" type="text" placeholder="Hey Jarvis, type or speak…" autocomplete="off" enterkeyhint="send" aria-label="Message"></div>
+ <div class="hud" id="rBub"><div class="logo s"></div><div id="capBox"><span id="capTxt"></span><div id="capLink"></div></div><div class="wv big" data-n="12"></div></div>
+ <nav class="hud" id="dock">
+  <button class="ib" id="dHome" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v11h14V10M10 21v-6h4v6"/></svg></button>
+  <button class="ib" id="langBtn" aria-label="Language"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span id="langTag">EN</span></button>
+  <button class="ib mic" id="mic" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+  <button class="ib" id="spkBtn" aria-label="Voice output on/off"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+  <button class="ib" id="dPower" aria-label="Stop"><svg viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.7a8 8 0 1 0 11.4 0"/></svg></button>
+ </nav>
+</div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -118,8 +168,12 @@ scene.add(pts);
 
 function resize(){
   const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;
-  const a=w/h, d=a<.7?2.9:a<1.2?2.5:2.2;           // portrait phones: camera back
-  camera.position.set(0,1.28,d);camera.lookAt(0,1.2,0);camera.updateProjectionMatrix();
+  const tn=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const d=Math.max(.5/(tn*camera.aspect),.78/tn);          // CHARACTER SIZE: .5 = half-width (m) kept in view; smaller = bigger avatar
+  const vh=d*tn, ty=1.68-.78*vh;                           // head sits near top, torso fills centre
+  camera.position.set(0,ty+.05,d);camera.lookAt(0,ty,0);camera.updateProjectionMatrix();
+  rings.scale.setScalar(Math.min(1,camera.aspect*.9));
+}
 }
 addEventListener('resize',resize);resize();
 
@@ -139,6 +193,7 @@ new GLTFLoader().register(p=>new VRMLoaderPlugin(p)).load(CONFIG.MODEL,gltf=>{
 addEventListener('pointermove',e=>{lookTarget.position.set((e.clientX/innerWidth-.5)*1.6,1.6-(e.clientY/innerHeight)*.8,2)});
 
 /* ================= ANIMATION ENGINE (procedural) ================= */
+const PALM=1.3; // palm roll for open hands: flip sign (-1.3) if palms face down/back
 let gesture='idle',gUntil=0,emo='neutral',emoUntil=0,pulse=0,vowelI=0,vowelT=0,blinkT=2,blinkV=0,nextAuto=8;
 const EMOS=['happy','sad','angry','surprised','relaxed'];
 const emoW={happy:0,sad:0,angry:0,surprised:0,relaxed:0};
@@ -155,11 +210,13 @@ function pose(t){
   const br=s(t*1.6)*.012;
   // base: arms down, breathing, tiny sway
   let hx=s(t*.7)*.03,hy=s(t*.5)*.05,hz=0,sx=br,sy=0;
-  let LUz=-1.25,RUz=1.25,LUx=0,RUx=0,LLz=-.15,RLz=.15,LLy=0,RLy=0;
-  if(speaking){hx+=s(t*4.1)*.04;hy+=s(t*2.3)*.07;
-    LUz=-1.15+s(t*3)*.05;RUz=1.15-s(t*3.4)*.05;LLz=-.3+s(t*2.6)*.18;RLz=.3-s(t*2.9)*.18}
+  let LUz=-1.25,RUz=1.25,LUx=0,RUx=0,LLz=-.15,RLz=.15,LLy=0,RLy=0,PL=0;
+  if(speaking||listening||g==='present'){                  // open-palm "presenting" pose like the reference
+    hx+=speaking?s(t*4.1)*.04:0;hy+=speaking?s(t*2.3)*.07:0;
+    LUz=-1.1+s(t*1.7)*.05;RUz=1.1-s(t*1.9)*.05;
+    LLy=-1.15+s(t*2.2)*.12;RLy=1.15-s(t*2.5)*.12;LLz=0;RLz=0;PL=1}
   switch(g){
-    case'wave':RUz=-1.0;RUx=0;RLz=-.5+s(t*10)*.5;hz=.08;hy=-.15;break;
+    case'wave':RUz=-1.0;RUx=0;RLy=0;PL=0;RLz=-.5+s(t*10)*.5;hz=.08;hy=-.15;break;
     case'nod':hx=.12+s(t*7)*.16;break;
     case'shake':hy=s(t*8)*.32;break;
     case'think':hz=.16;hx=-.12;hy=.2;RUz=.5;RUx=-.9;RLz=1.2;break;
@@ -175,6 +232,7 @@ function pose(t){
   tgt('chest',sx,sy+hy*.2,0,.08);tgt('spine',sx*.5,0,0,.08);
   tgt('leftUpperArm',LUx,0,LUz);tgt('rightUpperArm',RUx,0,RUz);
   tgt('leftLowerArm',0,LLy,LLz);tgt('rightLowerArm',0,RLy,RLz);
+  tgt('leftHand',PALM*PL,0,0);tgt('rightHand',PALM*PL,0,0);
   tgt('hips',0,0,0,.1);
 }
 function face(dt,t){
@@ -225,11 +283,13 @@ const KW=[
 function react(userText,replyText){
   const hit=s=>KW.find(k=>k[0].test(s));
   const k=hit(userText||'')||hit((replyText||'').slice(0,160));
-  if(k)setGesture(k[1],2.8,k[2]);else setGesture('nod',1.5,'relaxed');
+  if(k)setGesture(k[1],2.8,k[2]);else setGesture('present',3,'happy');
 }
 
 /* ================= UI helpers ================= */
-function setState(){ $('state').textContent=listening?'LISTENING…':busy?'PROCESSING…':speaking?'SPEAKING…':'STANDBY · TAP MIC TO TALK'; $('mic').classList.toggle('on',listening); }
+function setState(){
+  $('state').textContent=listening?'Yes Sir, I am listening…':busy?'Processing…':speaking?'Speaking…':'Say “Hello Jarvis” or tap the mic';
+  $('mic').classList.toggle('on',listening);document.body.classList.toggle('talk',listening||speaking||busy)}
 let capTimer=0;
 function showCap(text,kind='',link=null){
   const b=$('capBox');b.className=kind;$('capTxt').textContent=text;$('capLink').innerHTML='';
@@ -274,18 +334,27 @@ function output(text,kind='',link=null,userText=''){
 
 /* ================= LOCAL COMMANDS ================= */
 let weather=null;
+const WMO={0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
+let wT=0;function showW(){$('wCard').classList.add('show');clearTimeout(wT);wT=setTimeout(()=>$('wCard').classList.remove('show'),15000)}
 async function loadWeather(){
-  try{const p=CONFIG.PLACE;const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&wind_speed_unit=ms`);
-    const j=(await r.json()).current;weather={t:j.temperature_2m,h:j.relative_humidity_2m,w:j.wind_speed_10m,city:p.city}}catch(e){weather=null}
+  try{const p=CONFIG.PLACE;const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=ms`);
+    const j=(await r.json()).current;
+    weather={t:j.temperature_2m,f:j.apparent_temperature,h:j.relative_humidity_2m,w:j.wind_speed_10m,c:WMO[j.weather_code]||'Unknown',city:p.city};
+    $('wCity').textContent=p.city.toUpperCase()+' WEATHER';$('wTemp').textContent=Math.round(weather.t);$('wCond').textContent=weather.c;
+    $('wHum').textContent=weather.h+'%';$('wWind').textContent=weather.w+' m/s';$('wFeel').textContent=Math.round(weather.f)+'°C';
+  }catch(e){weather=null}
 }
-if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{CONFIG.PLACE={lat:p.coords.latitude,lon:p.coords.longitude,city:L('your location','आपकी लोकेशन')}},()=>{},{timeout:8000,maximumAge:600000});
+if(navigator.geolocation)navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;let city='Your area';
+  try{const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);const j=await r.json();city=j.city||j.locality||j.principalSubdivision||city}catch(e){}
+  CONFIG.PLACE={lat,lon,city};loadWeather()},()=>{},{timeout:8000,maximumAge:600000});
+loadWeather();setInterval(loadWeather,600000);
 let batt=null;if(navigator.getBattery)navigator.getBattery().then(b=>batt=b).catch(()=>{});
 const openUrl=(url,label)=>window.open(url,'_blank')?null:{url,label};
 const actions={
   time:()=>({text:L('It is ','अभी ')+new Date().toLocaleTimeString(lang==='hi'?'hi-IN':'en-IN',{hour:'2-digit',minute:'2-digit'})+L('.',' बजे हैं।')}),
   date:()=>({text:L('Today is ','आज ')+new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+L('.',' है।')}),
   battery:()=>batt?({text:L(`Battery is at ${Math.round(batt.level*100)} percent${batt.charging?' and charging':''}.`,`बैटरी ${Math.round(batt.level*100)} प्रतिशत है${batt.charging?' और चार्ज हो रही है':''}।`)}):({text:L('Battery data is not available here.','यहाँ बैटरी की जानकारी उपलब्ध नहीं है।')}),
-  async weather(){await loadWeather();if(!weather)return{text:L('Weather is unavailable right now.','अभी मौसम उपलब्ध नहीं है।'),kind:'error'};
+  async weather(){await loadWeather();showW();if(!weather)return{text:L('Weather is unavailable right now.','अभी मौसम उपलब्ध नहीं है।'),kind:'error'};
     return{text:L(`${weather.city}: ${weather.t} degrees, humidity ${weather.h} percent, wind ${weather.w} metres per second.`,`${weather.city}: तापमान ${weather.t} डिग्री, नमी ${weather.h} प्रतिशत, हवा ${weather.w} मीटर प्रति सेकंड।`)}},
   youtube:()=>({text:L('Opening YouTube.','यूट्यूब खोल रहा हूँ।'),link:openUrl('https://www.youtube.com','Tap to open YouTube')}),
   google:()=>({text:L('Opening Google.','गूगल खोल रहा हूँ।'),link:openUrl('https://www.google.com','Tap to open Google')}),
@@ -331,7 +400,7 @@ function errorText(e){
 /* ================= SUBMIT ================= */
 async function submit(raw){
   const text=(raw||'').trim();if(!text||busy)return;
-  woke=true;stopSpeech();$('cmd').value='';
+  woke=true;stopSpeech();
   const local=matchLocal(text);
   setBusy(true);
   try{
@@ -343,7 +412,7 @@ async function submit(raw){
       history=history.slice(-CONFIG.MAX_HISTORY);store.set('jarvis.history',JSON.stringify(history));
       gUntil=0;output(reply,'',null,text);
     }catch(e){gUntil=0;output(errorText(e),'error');setGesture('sad',3,'sad')}
-  }finally{setBusy(false);$('cmd').focus({preventScroll:true})}
+  }finally{setBusy(false)}
 }
 
 /* ================= VOICE IN ================= */
@@ -364,12 +433,25 @@ function toggleListen(){
 /* ================= WIRING ================= */
 $('cmd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit($('cmd').value)}});
 $('mic').onclick=toggleListen;
-const refresh=()=>{$('langBtn').textContent=lang==='hi'?'हि':'EN';$('cmd').placeholder=lang==='hi'?'संदेश लिखें…':'Type a message…';$('spkBtn').classList.toggle('off',!voiceOn)};
+const refresh=()=>{$('langTag').textContent=lang==='hi'?'हि':'EN';$('cmd').placeholder=lang==='hi'?'संदेश लिखें या बोलें…':'Hey Jarvis, type or speak…';$('spkBtn').classList.toggle('off',!voiceOn)};
 $('langBtn').onclick=()=>{lang=lang==='en'?'hi':'en';store.set('jarvis.lang',lang);refresh();if(listening&&rec)rec.stop();showCap(lang==='hi'?'भाषा: हिंदी':'Language: English')};
 $('spkBtn').onclick=()=>{voiceOn=!voiceOn;store.set('jarvis.voice',voiceOn?'on':'off');if(!voiceOn)stopSpeech();refresh();showCap(voiceOn?L('Voice output on.','आवाज़ चालू।'):L('Voice output off.','आवाज़ बंद।'))};
 // first tap anywhere = wake (browsers need a gesture before speech works)
-addEventListener('pointerdown',function w(e){if(woke||e.target.closest('#bar'))return;woke=true;
+addEventListener('pointerdown',function w(e){if(woke||e.target.closest('button,input,#wCard'))return;woke=true;
   const g=L('Online, sir. How can I help?','ऑनलाइन हूँ, सर। क्या करना है?');output(g,'',null,'hello')},{once:false});
+document.querySelectorAll('.wv').forEach(w=>{const n=+w.dataset.n||14;for(let i=0;i<n;i++){const b=document.createElement('i');b.style.animationDelay=(i*.06)+'s';b.style.animationDuration=(.55+(i%5)*.13)+'s';w.appendChild(b)}});
+const sys=()=>{const c=navigator.connection;return{text:L(`Internet ${navigator.onLine?'connected':'offline'}${c&&c.effectiveType?' ('+c.effectiveType+')':''}.${navigator.deviceMemory?' Device memory about '+navigator.deviceMemory+' GB.':''}`,`इंटरनेट ${navigator.onLine?'चालू':'बंद'} है।`)}};
+async function quick(k){
+  if(busy)return;woke=true;
+  if(k==='search'){stopSpeech();$('cmd').value='google search ';$('cmd').focus();return}
+  if(k==='more')return output(L('Try: weather, battery, time, date, open youtube, google search …, clear chat — or ask me anything.','आज़माएँ: मौसम, बैटरी, समय, तारीख, open youtube, google search …, clear chat — या कुछ भी पूछें।'),'',null,'');
+  stopSpeech();$('cmd').value={weather:'Weather',youtube:'Open YouTube',system:'System',battery:'Battery'}[k];setBusy(true);
+  try{const o=k==='system'?sys():await actions[k]();output(o.text,o.kind||'',o.link||null,'')}finally{setBusy(false)}
+}
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>quick(b.dataset.q));
+$('dHome').onclick=()=>{woke=true;stopSpeech();output(L('Online, sir. How can I help?','ऑनलाइन हूँ, सर। क्या करना है?'),'',null,'hello')};
+$('dPower').onclick=()=>{stopSpeech();if(listening&&rec)rec.stop();setGesture('bow',2,'relaxed')};
+$('cmd').addEventListener('focus',e=>e.target.select());
 refresh();setState();
 if('serviceWorker'in navigator&&location.protocol!=='file:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
