@@ -2,550 +2,376 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#020810">
-
-<title>JARVIS AI</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JARVIS">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>J.A.R.V.I.S v3.0</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Exo+2:wght@500;600&display=swap" rel="stylesheet">
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: #020810;
-    color: #00eaff;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-}
-
-.app {
-    height: 100dvh;
-    width: 100%;
-    position: relative;
-    background:
-      radial-gradient(ellipse at center,
-      #073642 0%, #03121d 48%, #020810 100%);
-}
-
-header {
-    height: 65px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 22px;
-    border-bottom: 1px solid #00eaff55;
-    background: #020d17;
-    position: relative;
-    z-index: 5;
-}
-
-.logo {
-    font-size: 25px;
-    font-weight: bold;
-    letter-spacing: 5px;
-    text-shadow: 0 0 15px #00eaff;
-}
-
-.status {
-    font-size: 12px;
-    color: #00ffae;
-}
-
-.stage {
-    position: absolute;
-    top: 65px;
-    bottom: 105px;
-    width: 100%;
-    overflow: hidden;
-}
-
-#avatar {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-}
-
-#avatar canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.grid {
-    position: absolute;
-    inset: 0;
-    opacity: .15;
-    background-image:
-      linear-gradient(#00eaff44 1px, transparent 1px),
-      linear-gradient(90deg,#00eaff44 1px,transparent 1px);
-    background-size: 40px 40px;
-}
-
-.ring {
-    position: absolute;
-    width: min(75vw, 390px);
-    aspect-ratio: 1;
-    border: 1px solid #00eaff55;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-    box-shadow: 0 0 35px #00eaff22,
-                inset 0 0 35px #00eaff22;
-    animation: rotate 18s linear infinite;
-    z-index: 1;
-}
-
-.ring::before {
-    content: "";
-    position: absolute;
-    inset: 25px;
-    border: 1px dashed #00eaff88;
-    border-radius: 50%;
-}
-
-@keyframes rotate {
-    to { transform: translate(-50%,-50%) rotate(360deg); }
-}
-
-.scan {
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    background: #00eaff66;
-    box-shadow: 0 0 15px #00eaff;
-    animation: scan 6s linear infinite;
-    z-index: 3;
-    pointer-events: none;
-}
-
-@keyframes scan {
-    from { top: 5%; }
-    to { top: 95%; }
-}
-
-.label {
-    position: absolute;
-    bottom: 12px;
-    width: 100%;
-    text-align: center;
-    letter-spacing: 4px;
-    font-size: 12px;
-    z-index: 4;
-    pointer-events: none;
-}
-
-.info {
-    position: absolute;
-    top: 85px;
-    left: 15px;
-    z-index: 4;
-    font-size: 10px;
-    line-height: 2;
-    color: #80dce5;
-    pointer-events: none;
-}
-
-#message {
-    position: absolute;
-    bottom: 65px;
-    width: 100%;
-    text-align: center;
-    font-size: 13px;
-    color: #a7eaf0;
-    z-index: 5;
-    padding: 5px;
-}
-
-.bottom {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    padding: 12px;
-    background: #020810;
-    border-top: 1px solid #00eaff44;
-    z-index: 6;
-}
-
-.chat {
-    display: flex;
-    gap: 8px;
-    max-width: 650px;
-    margin: auto;
-}
-
-.chat input {
-    flex: 1;
-    min-width: 0;
-    padding: 14px 18px;
-    border-radius: 30px;
-    border: 1px solid #00eaff77;
-    background: #031b26;
-    color: white;
-    outline: none;
-}
-
-.chat button {
-    border: 1px solid #00eaff;
-    background: #003744;
-    color: #00eaff;
-    border-radius: 30px;
-    padding: 0 22px;
-}
-
-@media(max-width:600px) {
-    .ring {
-        width: 80vw;
-    }
-
-    .info {
-        font-size: 9px;
-    }
-}
+:root{--cyan:#19d3ff;--blue:#1a78ff;--text:#e6f6ff;--dim:#86b8dc;--err:#ff6b6b;--gold:#f2c230;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#01040b;color:var(--text);font-family:'Exo 2',system-ui,sans-serif}
+/* ---- futuristic background (CSS layers) ---- */
+#bg{position:fixed;inset:0;background:
+  radial-gradient(70% 45% at 50% 38%,rgba(20,110,255,.38),transparent 70%),
+  radial-gradient(60% 30% at 50% 100%,rgba(0,229,212,.18),transparent 70%),#01040b}
+#grid{position:fixed;left:-50%;right:-50%;bottom:0;height:55%;transform:perspective(420px) rotateX(62deg);transform-origin:bottom;
+  background-image:linear-gradient(rgba(25,211,255,.38) 1px,transparent 1px),linear-gradient(90deg,rgba(25,211,255,.38) 1px,transparent 1px);
+  background-size:60px 60px;animation:gridmove 3s linear infinite;
+  -webkit-mask-image:linear-gradient(to top,#000 10%,transparent 85%);mask-image:linear-gradient(to top,#000 10%,transparent 85%)}
+@keyframes gridmove{to{background-position:0 60px}}
+#scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+/* ---- minimal UI ---- */
+#cap{position:fixed;left:0;right:0;bottom:calc(76px + var(--sb));padding:0 16px;display:flex;justify-content:center;pointer-events:none}
+#capBox{max-width:620px;max-height:22dvh;overflow-y:auto;pointer-events:auto;padding:10px 16px;border-radius:18px;
+  background:rgba(2,10,28,.62);border:1px solid rgba(26,120,255,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  font-size:1.02rem;font-weight:600;line-height:1.4;color:var(--cyan);text-align:center;overflow-wrap:anywhere;white-space:pre-wrap;transition:opacity .5s}
+#capBox.hide{opacity:0}#capBox.error{color:var(--err)}#capBox a{color:var(--gold)}
+#bar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + var(--sb));display:flex;justify-content:center;gap:8px}
+#barIn{width:100%;max-width:620px;display:flex;gap:8px;align-items:center}
+#cmd{flex:1;min-width:0;height:46px;padding:0 16px;border-radius:23px;border:1.5px solid var(--blue);background:rgba(2,10,28,.7);
+  color:var(--text);font:500 1rem 'Exo 2',sans-serif;outline:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#cmd:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(25,211,255,.45)}
+.ib{width:46px;height:46px;flex:none;border-radius:50%;border:1.5px solid var(--blue);background:rgba(2,10,28,.7);color:var(--cyan);
+  display:grid;place-items:center;font:700 .8rem Orbitron,sans-serif;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib.off{opacity:.5}.ib.on{border-color:#00e5d4;color:#00e5d4;box-shadow:0 0 16px rgba(0,229,212,.7);animation:pl 1s infinite}
+@keyframes pl{50%{transform:scale(1.1)}}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#state{position:fixed;top:calc(10px + var(--st));left:0;right:0;text-align:center;font:700 .72rem Orbitron,sans-serif;letter-spacing:.08em;color:var(--dim);pointer-events:none;text-shadow:0 0 8px rgba(25,211,255,.6)}
+#load{position:fixed;inset:0;display:grid;place-items:center;font:700 .9rem Orbitron,sans-serif;color:var(--cyan);letter-spacing:.1em;pointer-events:none;transition:opacity .6s}
+@media (prefers-reduced-motion:reduce){#grid{animation:none}}
 </style>
-</head>
-
-<body>
-
-<div class="app">
-
-<header>
-    <div class="logo">JARVIS</div>
-    <div class="status">● SYSTEM ONLINE</div>
-</header>
-
-<div class="grid"></div>
-
-<div class="info">
-    AI CORE : ONLINE<br>
-    AVATAR : LOADING<br>
-    MODE : READY
-</div>
-
-<main class="stage">
-
-    <div class="ring"></div>
-
-    <div id="avatar"></div>
-
-    <div class="scan"></div>
-
-    <div class="label">
-        JARVIS AI ASSISTANT
-    </div>
-
-</main>
-
-<div id="message">
-    Initializing JARVIS...
-</div>
-
-<div class="bottom">
-    <div class="chat">
-        <input id="chatInput"
-               placeholder="Talk to JARVIS..."
-               autocomplete="off">
-
-        <button onclick="sendMessage()">SEND</button>
-    </div>
-</div>
-
-</div>
-
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
-    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
-  }
-}
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+ "@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.1.0/lib/three-vrm.module.min.js"}}
 </script>
+</head>
+<body>
+<div id="bg"></div><div id="grid"></div>
+<canvas id="gl"></canvas>
+<div id="scan"></div>
+<div id="state">STANDBY · TAP TO WAKE</div>
+<div id="load">LOADING AVATAR…</div>
+<div id="cap"><div id="capBox" class="hide"><span id="capTxt"></span><div id="capLink"></div></div></div>
+<div id="bar"><div id="barIn">
+  <button class="ib" id="langBtn" aria-label="Language">EN</button>
+  <input id="cmd" type="text" placeholder="Type a message…" autocomplete="off" enterkeyhint="send" aria-label="Message">
+  <button class="ib" id="spkBtn" aria-label="Voice output"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+  <button class="ib" id="mic" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+</div></div>
 
 <script type="module">
-
-import * as THREE from "three";
-
-import { GLTFLoader } from
-"three/addons/loaders/GLTFLoader.js";
-
-import {
-    VRMLoaderPlugin,
-    VRMUtils
-} from "@pixiv/three-vrm";
-
-
-const container = document.getElementById("avatar");
-const message = document.getElementById("message");
-
-let vrm = null;
-let head = null;
-
-const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(
-    30, 1, 0.1, 100
-);
-
-const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    antialias: true
-});
-
-renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
-);
-
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-container.appendChild(renderer.domElement);
-
-
-// Lighting
-
-scene.add(new THREE.HemisphereLight(
-    0xffffff, 0x334455, 2
-));
-
-const light = new THREE.DirectionalLight(
-    0xffffff, 3
-);
-
-light.position.set(1, 3, 4);
-scene.add(light);
-
-
-// Camera
-
-camera.position.set(0, 1.25, 4.5);
-camera.lookAt(0, 1.15, 0);
-
-
-// Resize
-
-function resize() {
-
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-
-    if (!width || !height) return;
-
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(width, height);
-
-}
-
-window.addEventListener("resize", resize);
-
-
-// VRM Loader
-
-const loader = new GLTFLoader();
-
-loader.register(parser => {
-    return new VRMLoaderPlugin(parser);
-});
-
-message.textContent = "Loading Female Avatar...";
-
-loader.load(
-
-    "./assets/models/viverse_avatar_model_202181.vrm",
-
-    (gltf) => {
-
-        vrm = gltf.userData.vrm;
-
-        if (!vrm) {
-            message.textContent = "VRM model not detected!";
-            return;
-        }
-
-        // Support VRM 0.0 orientation
-        VRMUtils.rotateVRM0(vrm);
-
-        VRMUtils.removeUnnecessaryVertices(gltf.scene);
-        VRMUtils.removeUnnecessaryJoints(gltf.scene);
-
-        scene.add(vrm.scene);
-
-        // Fit model to screen
-        const box = new THREE.Box3().setFromObject(vrm.scene);
-
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-
-        const height = size.y || 2;
-
-        const scale = 2.2 / height;
-
-        vrm.scene.scale.setScalar(scale);
-
-        vrm.scene.position.set(
-            -center.x * scale,
-            -box.min.y * scale,
-            -center.z * scale
-        );
-
-        head = vrm.humanoid.getNormalizedBoneNode("head");
-
-        resize();
-
-        message.textContent =
-            "JARVIS AVATAR SUCCESSFULLY LOADED";
-
-        console.log("VRM Loaded:", vrm);
-
-    },
-
-    (progress) => {
-
-        if (progress.total > 0) {
-
-            const percent = Math.round(
-                progress.loaded / progress.total * 100
-            );
-
-            message.textContent =
-                "Loading Avatar: " + percent + "%";
-
-        }
-
-    },
-
-    (error) => {
-
-        console.error("VRM Loading Error:", error);
-
-        message.textContent =
-            "ERROR: " + (error.message || "Avatar Loading Failed");
-
-    }
-
-);
-
-
-// Animation
-
-const clock = new THREE.Clock();
-
-let blinkTime = 0;
-let nextBlink = 3;
-
-function animate() {
-
-    requestAnimationFrame(animate);
-
-    const delta = Math.min(clock.getDelta(), 0.05);
-
-    if (vrm) {
-
-        const time = clock.elapsedTime;
-
-        // Natural head movement
-        if (head) {
-
-            head.rotation.y =
-                Math.sin(time * 0.6) * 0.035;
-
-            head.rotation.x =
-                Math.sin(time * 0.8) * 0.015;
-
-        }
-
-        // Eye blinking
-        if (vrm.expressionManager) {
-
-            blinkTime += delta;
-
-            const phase = blinkTime % nextBlink;
-
-            if (phase > nextBlink - 0.18) {
-
-                const value = Math.sin(
-                    Math.PI * (phase - (nextBlink - 0.18)) / 0.18
-                );
-
-                vrm.expressionManager.setValue(
-                    "blink", Math.max(0, value)
-                );
-
-            } else {
-
-                vrm.expressionManager.setValue("blink", 0);
-
-            }
-
-            if (blinkTime > nextBlink) {
-
-                blinkTime = 0;
-                nextBlink = 2.5 + Math.random() * 3;
-
-            }
-
-        }
-
-        vrm.update(delta);
-
-    }
-
-    renderer.render(scene, camera);
-
-}
-
-resize();
-animate();
-
-
-// Future Lip Sync Control
-
-window.jarvisLipSync = function(value) {
-
-    if (!vrm || !vrm.expressionManager) return;
-
-    vrm.expressionManager.setValue(
-        "aa",
-        Math.max(0, Math.min(1, value))
-    );
-
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+
+/* ================= CONFIG (backend unchanged) ================= */
+const CONFIG = {
+  API_URL:'https://aryan-ai-backend-v2.vercel.app/api/chat',
+  MODEL:'./assets/models/viverse_avatar_model_202181.vrm',
+  TIMEOUT_MS:45000, MAX_HISTORY:20,
+  PLACE:{lat:22.5726,lon:88.3639,city:'Kolkata'},
+  SPEECH_LANG:{en:'en-IN',hi:'hi-IN'}, API_LANG:{en:'en',hi:'hi'}
 };
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let lang=store.get('jarvis.lang','en')==='hi'?'hi':'en', voiceOn=store.get('jarvis.voice','on')!=='off';
+let history=[];try{const h=JSON.parse(store.get('jarvis.history','[]'));if(Array.isArray(h))history=h.filter(m=>m&&(m.role==='user'||m.role==='assistant')&&typeof m.content==='string').slice(-CONFIG.MAX_HISTORY)}catch(e){}
+const L=(en,hi)=>lang==='hi'?hi:en;
+let busy=false,listening=false,speaking=false,rec=null,woke=false;
 
-window.jarvisStopLipSync = function() {
-    window.jarvisLipSync(0);
-};
+/* ================= THREE SCENE ================= */
+const canvas=$('gl');
+const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(28,1,.1,50);
+scene.add(new THREE.AmbientLight(0x8fb8ff,.9));
+const key=new THREE.DirectionalLight(0xffffff,1.6);key.position.set(.8,1.6,2);scene.add(key);
+const rim=new THREE.DirectionalLight(0x19d3ff,2.2);rim.position.set(-1.5,1.5,-1.5);scene.add(rim);
 
-</script>
+// glowing rings + particles behind avatar
+const rings=new THREE.Group();rings.position.set(0,1.15,-.7);scene.add(rings);
+[[.9,.008,0x19d3ff],[1.1,.005,0x1a78ff],[1.3,.01,0x00e5d4]].forEach(([r,t,c],i)=>{
+  const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,128),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.75,blending:THREE.AdditiveBlending}));
+  m.rotation.x=i*.35;rings.add(m);
+});
+const N=260,pp=new Float32Array(N*3);
+for(let i=0;i<N;i++){pp[i*3]=(Math.random()-.5)*5;pp[i*3+1]=Math.random()*3;pp[i*3+2]=-Math.random()*3}
+const pts=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(pp,3)),
+  new THREE.PointsMaterial({color:0x6fe6ff,size:.022,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));
+scene.add(pts);
 
-<script>
+function resize(){
+  const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;
+  const a=w/h, d=a<.7?2.9:a<1.2?2.5:2.2;           // portrait phones: camera back
+  camera.position.set(0,1.28,d);camera.lookAt(0,1.2,0);camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize);resize();
 
-function sendMessage() {
+/* ================= VRM ================= */
+let vrm=null;const lookTarget=new THREE.Object3D();scene.add(lookTarget);lookTarget.position.set(0,1.4,2);
+const bone=n=>vrm&&vrm.humanoid.getNormalizedBoneNode(n);
+new GLTFLoader().register(p=>new VRMLoaderPlugin(p)).load(CONFIG.MODEL,gltf=>{
+  vrm=gltf.userData.vrm;VRMUtils.removeUnnecessaryVertices(gltf.scene);
+  VRMUtils.rotateVRM0(vrm);                         // VRM0 models face -Z; this fixes it (no-op for VRM1)
+  vrm.scene.traverse(o=>{o.frustumCulled=false});
+  scene.add(vrm.scene);
+  if(vrm.lookAt)vrm.lookAt.target=lookTarget;
+  $('load').style.opacity=0;
+  setTimeout(()=>{ if(!woke) setGesture('wave',2.8,'happy') },600);
+},undefined,err=>{console.error('[JARVIS] VRM load failed',err);$('load').textContent='AVATAR LOAD FAILED — CHECK MODEL PATH';});
 
-    const input = document.getElementById("chatInput");
+addEventListener('pointermove',e=>{lookTarget.position.set((e.clientX/innerWidth-.5)*1.6,1.6-(e.clientY/innerHeight)*.8,2)});
 
-    if (!input.value.trim()) return;
+/* ================= ANIMATION ENGINE (procedural) ================= */
+let gesture='idle',gUntil=0,emo='neutral',emoUntil=0,pulse=0,vowelI=0,vowelT=0,blinkT=2,blinkV=0,nextAuto=8;
+const EMOS=['happy','sad','angry','surprised','relaxed'];
+const emoW={happy:0,sad:0,angry:0,surprised:0,relaxed:0};
+const VOW=['aa','ih','ou','ee','oh'],vowW={aa:0,ih:0,ou:0,ee:0,oh:0};
+function setGesture(g,dur=2.5,e='neutral'){gesture=g;gUntil=clock.elapsedTime+dur;emo=e;emoUntil=clock.elapsedTime+dur+1.5}
+const cur={};                                       // smoothed euler per bone
+function tgt(name,x,y,z,k=.12){
+  const b=bone(name);if(!b)return;
+  const c=cur[name]||(cur[name]={x:0,y:0,z:0});
+  c.x+=(x-c.x)*k;c.y+=(y-c.y)*k;c.z+=(z-c.z)*k;b.rotation.set(c.x,c.y,c.z);
+}
+function pose(t){
+  const g=(gUntil>t)?gesture:'idle', s=Math.sin;
+  const br=s(t*1.6)*.012;
+  // base: arms down, breathing, tiny sway
+  let hx=s(t*.7)*.03,hy=s(t*.5)*.05,hz=0,sx=br,sy=0;
+  let LUz=-1.25,RUz=1.25,LUx=0,RUx=0,LLz=-.15,RLz=.15,LLy=0,RLy=0;
+  if(speaking){hx+=s(t*4.1)*.04;hy+=s(t*2.3)*.07;
+    LUz=-1.15+s(t*3)*.05;RUz=1.15-s(t*3.4)*.05;LLz=-.3+s(t*2.6)*.18;RLz=.3-s(t*2.9)*.18}
+  switch(g){
+    case'wave':RUz=-1.0;RUx=0;RLz=-.5+s(t*10)*.5;hz=.08;hy=-.15;break;
+    case'nod':hx=.12+s(t*7)*.16;break;
+    case'shake':hy=s(t*8)*.32;break;
+    case'think':hz=.16;hx=-.12;hy=.2;RUz=.5;RUx=-.9;RLz=1.2;break;
+    case'bow':sx=.5;hx=.25;break;
+    case'cheer':LUz=1.2+s(t*6)*.1;RUz=-1.2-s(t*6)*.1;hx=-.1;break;
+    case'sad':hx=.22;sx=.12;LUz=-1.35;RUz=1.35;break;
+    case'angry':hx=.05;sx=-.04;LLz=-.7;RLz=.7;break;
+    case'surprise':sx=-.1;hx=-.12;LUz=-.9;RUz=.9;break;
+    case'laugh':sx=.06+s(t*14)*.04;hx=-.1+s(t*14)*.05;break;
+    case'look':hy=s(t*1.5)*.45;break;
+  }
+  tgt('head',hx,hy,hz,.1);tgt('neck',hx*.4,hy*.4,hz*.4,.1);
+  tgt('chest',sx,sy+hy*.2,0,.08);tgt('spine',sx*.5,0,0,.08);
+  tgt('leftUpperArm',LUx,0,LUz);tgt('rightUpperArm',RUx,0,RUz);
+  tgt('leftLowerArm',0,LLy,LLz);tgt('rightLowerArm',0,RLy,RLz);
+  tgt('hips',0,0,0,.1);
+}
+function face(dt,t){
+  const em=vrm.expressionManager;if(!em)return;
+  const active=emoUntil>t?emo:'neutral';
+  EMOS.forEach(e=>{emoW[e]+=((e===active?(e==='angry'?.6:.75):0)-emoW[e])*Math.min(1,dt*6);em.setValue(e,emoW[e])});
+  // blink
+  blinkT-=dt;if(blinkT<0){blinkV=1;blinkT=2+Math.random()*3.5}
+  blinkV=Math.max(0,blinkV-dt*7);em.setValue('blink',blinkV>0?Math.sin(blinkV*Math.PI):0);
+  // lip sync: vowel cycling driven by time + word-boundary pulses
+  pulse=Math.max(0,pulse-dt*5);
+  vowelT-=dt;if(vowelT<0){vowelI=(vowelI+1+(Math.random()*3|0))%5;vowelT=.07+Math.random()*.1}
+  const open=speaking?Math.min(1,.18+.5*Math.abs(Math.sin(t*12)*Math.sin(t*4.7))+.35*pulse):0;
+  VOW.forEach((v,i)=>{vowW[v]+=((speaking&&i===vowelI?open:0)-vowW[v])*Math.min(1,dt*18);em.setValue(v,vowW[v])});
+}
+const clock=new THREE.Clock();
+function frame(){
+  requestAnimationFrame(frame);
+  const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+  rings.rotation.z+=dt*.25;rings.rotation.y=Math.sin(t*.4)*.3;
+  rings.children.forEach((m,i)=>{m.rotation.x+=dt*(.15+i*.1);m.scale.setScalar(1+Math.sin(t*(speaking?4:1.2)+i)*.03)});
+  pts.rotation.y+=dt*.03;pts.position.y=Math.sin(t*.3)*.05;
+  if(vrm){
+    pose(t);face(dt,t);
+    // idle automation: random look / small gestures when nothing is happening
+    if(!busy&&!speaking&&!listening&&gUntil<t&&t>nextAuto){
+      const pick=['look','look','nod','think'][Math.random()*4|0];setGesture(pick,2.2,pick==='nod'?'happy':'relaxed');nextAuto=t+8+Math.random()*8}
+    if(gUntil<t&&busy)setGesture('think',1.2,'relaxed');
+    vrm.update(dt);
+  }
+  renderer.render(scene,camera);
+}
+frame();
 
-    document.getElementById("message").textContent =
-        "AI Backend connection will be added next.";
-
-    input.value = "";
-
+/* ================= INTENT → ANIMATION ================= */
+const KW=[
+ [/\b(hello|hi|hey|namaste|namaskar|good (morning|evening|afternoon)|jarvis)\b|नमस्ते|हेलो|प्रणाम/i,'wave','happy'],
+ [/\b(thank|thanks|shukriya|dhanyavad|bye|goodbye|alvida)\b|धन्यवाद|शुक्रिया|अलविदा/i,'bow','happy'],
+ [/\b(sorry|maaf|sad|dukh|cry|rona|miss you|alone)\b|माफ़|दुख|उदास/i,'sad','sad'],
+ [/\b(joke|funny|haha|lol|hasao|hasi|mazak)\b|हँस|मज़ाक|चुटकुला/i,'laugh','happy'],
+ [/\b(congrat|win|won|great|awesome|amazing|badhai|mubarak|party)\b|बधाई|मुबारक/i,'cheer','happy'],
+ [/\b(angry|gussa|idiot|stupid|hate|bakwas)\b|गुस्सा|बकवास/i,'angry','angry'],
+ [/\b(wow|really|seriously|sach|kya baat|shock)\b|क्या बात|सच में/i,'surprise','surprised'],
+ [/\b(yes|yeah|sure|ok|okay|haan|han|theek|correct|right)\b|हाँ|हां|ठीक/i,'nod','happy'],
+ [/\b(no|nahi|nahin|never|wrong|galat)\b|नहीं|ना|गलत/i,'shake','sad'],
+ [/\b(why|how|what|kyun|kaise|kya|explain|batao|samjhao)\b|\?|क्यों|कैसे|क्या|समझाओ/i,'think','relaxed']
+];
+function react(userText,replyText){
+  const hit=s=>KW.find(k=>k[0].test(s));
+  const k=hit(userText||'')||hit((replyText||'').slice(0,160));
+  if(k)setGesture(k[1],2.8,k[2]);else setGesture('nod',1.5,'relaxed');
 }
 
-document.getElementById("chatInput")
-.addEventListener("keydown", event => {
+/* ================= UI helpers ================= */
+function setState(){ $('state').textContent=listening?'LISTENING…':busy?'PROCESSING…':speaking?'SPEAKING…':'STANDBY · TAP MIC TO TALK'; $('mic').classList.toggle('on',listening); }
+let capTimer=0;
+function showCap(text,kind='',link=null){
+  const b=$('capBox');b.className=kind;$('capTxt').textContent=text;$('capLink').innerHTML='';
+  if(link){const a=document.createElement('a');a.href=link.url;a.target='_blank';a.rel='noopener';a.textContent=link.label;$('capLink').appendChild(a)}
+  clearTimeout(capTimer);capTimer=setTimeout(()=>{if(!speaking)b.classList.add('hide')},Math.max(6000,text.length*70));
+}
+function setBusy(b){busy=b;$('cmd').disabled=b;setState()}
 
-    if (event.key === "Enter") {
-        sendMessage();
-    }
+/* ================= SPEECH OUT (drives lip sync) ================= */
+let voices=[];const loadV=()=>{if('speechSynthesis'in window)voices=speechSynthesis.getVoices()};
+if('speechSynthesis'in window){loadV();speechSynthesis.onvoiceschanged=loadV}
+const pickVoice=c=>{c=c.toLowerCase();const n=v=>v.lang.replace('_','-').toLowerCase();return voices.find(v=>n(v)===c)||voices.find(v=>n(v).startsWith(c.slice(0,2)))||null};
+let token=0;
+function stopSpeech(){token++;if('speechSynthesis'in window)speechSynthesis.cancel();speaking=false;setState()}
+function speak(text){
+  if(!voiceOn||!('speechSynthesis'in window)){fakeTalk(text);return}
+  stopSpeech();
+  const clean=text.replace(/```[\s\S]*?```/g,' ').replace(/https?:\/\/\S+/g,' link ').replace(/[*_#`>~|]/g,'').replace(/\s+/g,' ').trim().slice(0,2500);
+  if(!clean)return;
+  const parts=clean.match(/[^.!?।\n]+[.!?।]?/g)||[clean],chunks=[];let c='';
+  parts.forEach(p=>{if((c+p).length>180&&c){chunks.push(c);c=p}else c+=p});if(c.trim())chunks.push(c);
+  const my=++token;
+  chunks.forEach((ch,i)=>{
+    const u=new SpeechSynthesisUtterance(ch.trim());
+    const code=/[\u0900-\u097F]/.test(ch)?CONFIG.SPEECH_LANG.hi:CONFIG.SPEECH_LANG.en;
+    u.lang=code;const v=pickVoice(code);if(v)u.voice=v;
+    u.onstart=()=>{if(my===token){speaking=true;setState()}};
+    u.onboundary=()=>{if(my===token)pulse=1};
+    if(i===chunks.length-1)u.onend=u.onerror=()=>{if(my===token){speaking=false;setState();$('capBox').classList.add('hide')}};
+    speechSynthesis.speak(u);
+  });
+}
+function fakeTalk(text){ // voice muted: mouth still moves while caption is shown
+  const my=++token;speaking=true;setState();
+  setTimeout(()=>{if(my===token){speaking=false;setState()}},Math.min(12000,text.length*55));
+}
+function output(text,kind='',link=null,userText=''){
+  showCap(text,kind,link);
+  if(kind!=='error')react(userText,text);
+  speak(text);
+}
 
-});
+/* ================= LOCAL COMMANDS ================= */
+let weather=null;
+async function loadWeather(){
+  try{const p=CONFIG.PLACE;const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&wind_speed_unit=ms`);
+    const j=(await r.json()).current;weather={t:j.temperature_2m,h:j.relative_humidity_2m,w:j.wind_speed_10m,city:p.city}}catch(e){weather=null}
+}
+if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{CONFIG.PLACE={lat:p.coords.latitude,lon:p.coords.longitude,city:L('your location','आपकी लोकेशन')}},()=>{},{timeout:8000,maximumAge:600000});
+let batt=null;if(navigator.getBattery)navigator.getBattery().then(b=>batt=b).catch(()=>{});
+const openUrl=(url,label)=>window.open(url,'_blank')?null:{url,label};
+const actions={
+  time:()=>({text:L('It is ','अभी ')+new Date().toLocaleTimeString(lang==='hi'?'hi-IN':'en-IN',{hour:'2-digit',minute:'2-digit'})+L('.',' बजे हैं।')}),
+  date:()=>({text:L('Today is ','आज ')+new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+L('.',' है।')}),
+  battery:()=>batt?({text:L(`Battery is at ${Math.round(batt.level*100)} percent${batt.charging?' and charging':''}.`,`बैटरी ${Math.round(batt.level*100)} प्रतिशत है${batt.charging?' और चार्ज हो रही है':''}।`)}):({text:L('Battery data is not available here.','यहाँ बैटरी की जानकारी उपलब्ध नहीं है।')}),
+  async weather(){await loadWeather();if(!weather)return{text:L('Weather is unavailable right now.','अभी मौसम उपलब्ध नहीं है।'),kind:'error'};
+    return{text:L(`${weather.city}: ${weather.t} degrees, humidity ${weather.h} percent, wind ${weather.w} metres per second.`,`${weather.city}: तापमान ${weather.t} डिग्री, नमी ${weather.h} प्रतिशत, हवा ${weather.w} मीटर प्रति सेकंड।`)}},
+  youtube:()=>({text:L('Opening YouTube.','यूट्यूब खोल रहा हूँ।'),link:openUrl('https://www.youtube.com','Tap to open YouTube')}),
+  google:()=>({text:L('Opening Google.','गूगल खोल रहा हूँ।'),link:openUrl('https://www.google.com','Tap to open Google')}),
+  search:q=>({text:L('Searching Google for: ','गूगल पर खोज रहा हूँ: ')+q,link:openUrl('https://www.google.com/search?q='+encodeURIComponent(q),'Tap to open results')}),
+  clear:()=>{history=[];store.set('jarvis.history','[]');return{text:L('Conversation memory cleared.','बातचीत की मेमोरी साफ़ कर दी गई।')}}
+};
+function matchLocal(raw){
+  const t=raw.toLowerCase().replace(/[?!.,।]/g,' ').replace(/\s+/g,' ').trim(),n=t.split(' ').length;let m;
+  if((m=t.match(/^(?:google search|search on google|search google for|google for)\s+(.+)$/)))return['search',m[1]];
+  if(/^(open|launch|start)\s+youtube$/.test(t)||/^youtube\s+(kholo|khol do|open)$/.test(t))return['youtube'];
+  if(/^(open|launch|start)\s+google$/.test(t)||/^google\s+(kholo|khol do|open)$/.test(t))return['google'];
+  if(/^(clear|reset)\s+(chat|memory|conversation|history)$/.test(t))return['clear'];
+  if(n<=6&&/\b(weather|mausam)\b|मौसम/.test(t)&&!/\b(in|at|of|for|mein|me)\b|\bमें\b/.test(t))return['weather'];
+  if(n<=5&&/\bbattery\b|बैटरी/.test(t))return['battery'];
+  if(n<=6&&/\b(date|tarikh|tareekh)\b|तारीख|\bwhat day\b/.test(t))return['date'];
+  if(n<=6&&/\b(time|samay|waqt|baje)\b|समय|कितने बजे/.test(t)&&!/\b(in|at|zone|complexity|machine|travel|table|series)\b/.test(t))return['time'];
+  return null;
+}
 
+/* ================= BACKEND ================= */
+const extractReply=j=>{const r=(j&&j.data&&typeof j.data.reply==='string')?j.data.reply:(j&&typeof j.reply==='string')?j.reply:null;return r&&r.trim()?r.trim():null};
+async function askBackend(text){
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),CONFIG.TIMEOUT_MS);
+  try{
+    const res=await fetch(CONFIG.API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text,messages:history.slice(-CONFIG.MAX_HISTORY),language:CONFIG.API_LANG[lang]}),signal:ctl.signal});
+    const raw=await res.text();let json=null;try{json=JSON.parse(raw)}catch(e){}
+    if(!res.ok){const d=json&&(typeof json.error==='string'?json.error:json.error&&json.error.message);throw{kind:'http',status:res.status,detail:d}}
+    const reply=extractReply(json);if(!reply)throw{kind:'invalid'};return reply;
+  }catch(e){if(e&&e.kind)throw e;if(e&&e.name==='AbortError')throw{kind:'timeout'};throw{kind:'network'}}
+  finally{clearTimeout(to)}
+}
+function errorText(e){
+  if(!navigator.onLine)return L('You are offline. Check your internet connection.','आप ऑफ़लाइन हैं। इंटरनेट कनेक्शन जाँचें।');
+  switch(e.kind){
+    case'timeout':return L('Aryan AI took too long to respond. Please try again.','Aryan AI ने समय पर जवाब नहीं दिया। फिर से कोशिश करें।');
+    case'http':return L(`Aryan AI backend error (HTTP ${e.status})${e.detail?': '+e.detail:''}.`,`Aryan AI बैकएंड में त्रुटि (HTTP ${e.status})।`);
+    case'invalid':return L('Aryan AI sent an invalid response. Please try again.','Aryan AI से अमान्य जवाब मिला।');
+    default:return L('Aryan AI backend is unavailable right now.','Aryan AI बैकएंड अभी उपलब्ध नहीं है।');
+  }
+}
+
+/* ================= SUBMIT ================= */
+async function submit(raw){
+  const text=(raw||'').trim();if(!text||busy)return;
+  woke=true;stopSpeech();$('cmd').value='';
+  const local=matchLocal(text);
+  setBusy(true);
+  try{
+    if(local){const o=await actions[local[0]](local[1]);output(o.text,o.kind||'',o.link||null,text);return}
+    showCap(L('Thinking…','सोच रहा हूँ…'));setGesture('think',60,'relaxed');
+    try{
+      const reply=await askBackend(text);
+      history.push({role:'user',content:text},{role:'assistant',content:reply});
+      history=history.slice(-CONFIG.MAX_HISTORY);store.set('jarvis.history',JSON.stringify(history));
+      gUntil=0;output(reply,'',null,text);
+    }catch(e){gUntil=0;output(errorText(e),'error');setGesture('sad',3,'sad')}
+  }finally{setBusy(false);$('cmd').focus({preventScroll:true})}
+}
+
+/* ================= VOICE IN ================= */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function toggleListen(){
+  if(listening){rec&&rec.stop();return}
+  if(busy)return;stopSpeech();
+  if(!SR)return showCap(L('Voice input is not supported in this browser. Try Chrome.','इस ब्राउज़र में वॉइस इनपुट समर्थित नहीं है।'),'error');
+  rec=new SR();rec.lang=CONFIG.SPEECH_LANG[lang];rec.interimResults=true;rec.continuous=false;
+  let fin='',heard=false;
+  rec.onstart=()=>{listening=true;setState();showCap(L('Listening…','सुन रहा हूँ…'));setGesture('look',60,'relaxed')};
+  rec.onresult=e=>{heard=true;let t='';for(let i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(e.results[i].isFinal)fin=t}$('cmd').value=t};
+  rec.onerror=e=>{const m={'not-allowed':L('Microphone permission denied.','माइक्रोफ़ोन की अनुमति नहीं मिली।'),'no-speech':L('I did not hear anything.','कुछ सुनाई नहीं दिया।'),'audio-capture':L('No microphone found.','माइक्रोफ़ोन नहीं मिला।'),'network':L('Speech recognition needs internet.','वॉइस पहचान के लिए इंटरनेट चाहिए।')}[e.error];if(m)showCap(m,'error');heard=true;fin=''};
+  rec.onend=()=>{listening=false;gUntil=0;setState();const t=(fin||$('cmd').value).trim();if(t)submit(t);else if(!heard)showCap(L('I did not hear anything.','कुछ सुनाई नहीं दिया।'),'error')};
+  try{rec.start()}catch(e){listening=false;setState()}
+}
+
+/* ================= WIRING ================= */
+$('cmd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit($('cmd').value)}});
+$('mic').onclick=toggleListen;
+const refresh=()=>{$('langBtn').textContent=lang==='hi'?'हि':'EN';$('cmd').placeholder=lang==='hi'?'संदेश लिखें…':'Type a message…';$('spkBtn').classList.toggle('off',!voiceOn)};
+$('langBtn').onclick=()=>{lang=lang==='en'?'hi':'en';store.set('jarvis.lang',lang);refresh();if(listening&&rec)rec.stop();showCap(lang==='hi'?'भाषा: हिंदी':'Language: English')};
+$('spkBtn').onclick=()=>{voiceOn=!voiceOn;store.set('jarvis.voice',voiceOn?'on':'off');if(!voiceOn)stopSpeech();refresh();showCap(voiceOn?L('Voice output on.','आवाज़ चालू।'):L('Voice output off.','आवाज़ बंद।'))};
+// first tap anywhere = wake (browsers need a gesture before speech works)
+addEventListener('pointerdown',function w(e){if(woke||e.target.closest('#bar'))return;woke=true;
+  const g=L('Online, sir. How can I help?','ऑनलाइन हूँ, सर। क्या करना है?');output(g,'',null,'hello')},{once:false});
+refresh();setState();
+if('serviceWorker'in navigator&&location.protocol!=='file:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
-
 </body>
 </html>
