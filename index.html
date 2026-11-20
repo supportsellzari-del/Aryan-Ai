@@ -4,268 +4,229 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#020b12">
-
-<title>JARVIS AI V3</title>
+<title>JARVIS AI V4</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+ --cyan:#00eaff;
+ --dark:#020b12;
 }
 
-:root {
-    --cyan: #00eaff;
-    --blue: #008cff;
-    --dark: #020b12;
+body{
+ background:var(--dark);
+ color:var(--cyan);
+ font-family:Arial,sans-serif;
+ overflow:hidden;
 }
 
-body {
-    background: var(--dark);
-    color: var(--cyan);
-    font-family: Arial, sans-serif;
-    overflow: hidden;
+.app{
+ width:100%;
+ height:100dvh;
+ position:relative;
+ overflow:hidden;
+ background:
+ radial-gradient(ellipse at 50% 48%,
+ #073b48 0%,#031923 45%,#02080e 100%);
 }
 
-.app {
-    width: 100%;
-    height: 100dvh;
-    position: relative;
-    overflow: hidden;
-    background:
-      radial-gradient(ellipse at 50% 48%,
-      #073b48 0%, #031923 42%, #02080e 100%);
+header{
+ height:65px;
+ padding:0 20px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ border-bottom:1px solid #00eaff55;
+ background:#03151ddd;
+ position:absolute;
+ top:0;
+ width:100%;
+ z-index:10;
 }
 
-/* HEADER */
-header {
-    height: 68px;
-    padding: 0 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #00eaff55;
-    background: #03151ddd;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    z-index: 10;
+.logo{
+ font-size:25px;
+ font-weight:bold;
+ letter-spacing:6px;
+ text-shadow:0 0 20px var(--cyan);
 }
 
-.logo {
-    font-size: 27px;
-    font-weight: bold;
-    letter-spacing: 6px;
-    text-shadow: 0 0 20px var(--cyan);
+.status{
+ color:#00ffae;
+ font-size:13px;
 }
 
-.status {
-    font-size: 13px;
-    color: #00ffae;
+main{
+ position:absolute;
+ top:65px;
+ bottom:0;
+ width:100%;
 }
 
-/* MAIN */
-main {
-    position: absolute;
-    top: 68px;
-    bottom: 0;
-    width: 100%;
+.center{
+ width:100%;
+ height:100%;
+ position:relative;
+ overflow:hidden;
 }
 
-.center {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
+#avatar{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ z-index:3;
 }
 
-/* AVATAR */
-#avatar {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3;
+#avatar canvas{
+ display:block;
+ width:100%;
+ height:100%;
 }
 
-#avatar canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
+.ring{
+ position:absolute;
+ width:min(75vw,430px);
+ aspect-ratio:1;
+ border:1px solid #00eaff66;
+ border-radius:50%;
+ left:50%;
+ top:46%;
+ transform:translate(-50%,-50%);
+ box-shadow:0 0 35px #00eaff22,
+ inset 0 0 35px #00eaff15;
+ pointer-events:none;
 }
 
-/* HOLOGRAM RINGS */
-.ring {
-    position: absolute;
-    width: min(75vw, 430px);
-    aspect-ratio: 1;
-    border: 1px solid #00eaff66;
-    border-radius: 50%;
-    left: 50%;
-    top: 47%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 35px #00eaff22,
-                inset 0 0 35px #00eaff15;
-    pointer-events: none;
+.ring.two{
+ width:min(62vw,350px);
+ border-style:dashed;
+ animation:spin 25s linear infinite;
 }
 
-.ring.two {
-    width: min(62vw, 350px);
-    border-style: dashed;
-    animation: spin 25s linear infinite;
+.ring.three{
+ width:min(48vw,270px);
+ opacity:.5;
 }
 
-.ring.three {
-    width: min(48vw, 270px);
-    opacity: .5;
+@keyframes spin{
+ to{transform:translate(-50%,-50%) rotate(360deg)}
 }
 
-@keyframes spin {
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+.scan{
+ position:absolute;
+ width:100%;
+ height:2px;
+ background:var(--cyan);
+ box-shadow:0 0 20px var(--cyan);
+ top:10%;
+ animation:scan 7s linear infinite;
+ opacity:.4;
+ z-index:5;
+ pointer-events:none;
 }
 
-/* SCAN */
-.scan {
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    background: #00eaff;
-    box-shadow: 0 0 20px #00eaff;
-    top: 10%;
-    animation: scan 7s linear infinite;
-    opacity: .45;
-    z-index: 5;
-    pointer-events: none;
+@keyframes scan{
+ 0%{top:10%;opacity:0}
+ 50%{opacity:.6}
+ 100%{top:90%;opacity:0}
 }
 
-@keyframes scan {
-    0% { top: 10%; opacity: 0; }
-    50% { opacity: .6; }
-    100% { top: 90%; opacity: 0; }
+.avatar-label{
+ position:absolute;
+ bottom:115px;
+ width:100%;
+ text-align:center;
+ font-size:12px;
+ letter-spacing:5px;
+ text-shadow:0 0 15px var(--cyan);
+ z-index:6;
+ pointer-events:none;
 }
 
-/* LABEL */
-.avatar-label {
-    position: absolute;
-    bottom: 112px;
-    width: 100%;
-    text-align: center;
-    font-size: 13px;
-    letter-spacing: 5px;
-    text-shadow: 0 0 15px var(--cyan);
-    z-index: 6;
-    pointer-events: none;
+#message{
+ position:absolute;
+ bottom:67px;
+ left:50%;
+ transform:translateX(-50%);
+ width:94%;
+ text-align:center;
+ color:#a8e9ee;
+ font-size:14px;
+ z-index:8;
 }
 
-/* MESSAGE */
-#message {
-    position: absolute;
-    bottom: 68px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 92%;
-    text-align: center;
-    color: #a8e9ee;
-    font-size: 14px;
-    z-index: 8;
+.chat{
+ position:absolute;
+ bottom:10px;
+ left:50%;
+ transform:translateX(-50%);
+ width:min(650px,94%);
+ display:flex;
+ gap:10px;
+ z-index:10;
 }
 
-/* CHAT */
-.chat {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(650px, 94%);
-    display: flex;
-    gap: 10px;
-    z-index: 10;
+.chat input{
+ flex:1;
+ min-width:0;
+ padding:15px 18px;
+ background:#031b25;
+ border:1px solid #00eaff99;
+ border-radius:40px;
+ outline:none;
+ color:white;
+ font-size:15px;
 }
 
-.chat input {
-    flex: 1;
-    min-width: 0;
-    padding: 16px 19px;
-    background: #031b25;
-    border: 1px solid #00eaff99;
-    border-radius: 40px;
-    outline: none;
-    color: white;
-    font-size: 15px;
+.chat input::placeholder{color:#82bfc7}
+
+.chat button{
+ padding:0 23px;
+ border:1px solid var(--cyan);
+ border-radius:40px;
+ background:#00414d;
+ color:var(--cyan);
+ font-size:14px;
+ font-weight:bold;
 }
 
-.chat input::placeholder {
-    color: #82bfc7;
+#loader{
+ position:absolute;
+ top:45%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ z-index:2;
+ font-size:13px;
+ letter-spacing:2px;
+ text-align:center;
 }
 
-.chat button {
-    padding: 0 24px;
-    border: 1px solid var(--cyan);
-    border-radius: 40px;
-    background: #00414d;
-    color: var(--cyan);
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
+@media(max-width:600px){
+ header{height:60px;padding:0 16px}
+ .logo{font-size:22px}
+ .status{font-size:12px}
+ main{top:60px}
+ .avatar-label{bottom:115px;font-size:10px}
+ #message{font-size:13px}
+ .chat input{padding:14px;font-size:14px}
+ .chat button{padding:0 18px}
 }
 
-#loader {
-    position: absolute;
-    top: 48%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-align: center;
-}
-
-/* MOBILE */
-@media(max-width: 600px) {
-    header {
-        height: 62px;
-        padding: 0 18px;
-    }
-
-    .logo { font-size: 23px; }
-    .status { font-size: 12px; }
-
-    main { top: 62px; }
-
-    .avatar-label {
-        bottom: 116px;
-        font-size: 11px;
-        letter-spacing: 4px;
-    }
-
-    #message {
-        bottom: 68px;
-        font-size: 13px;
-    }
-
-    .chat input {
-        padding: 15px;
-        font-size: 14px;
-    }
-
-    .chat button {
-        padding: 0 19px;
-    }
-}
-
-@media(max-height: 550px) {
-    .avatar-label { bottom: 72px; }
-    #message { bottom: 52px; }
-    .chat { bottom: 5px; }
+@media(max-height:550px){
+ .avatar-label{bottom:75px}
+ #message{bottom:48px}
+ .chat{bottom:4px}
 }
 </style>
 
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
+ "imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+ }
 }
 </script>
 </head>
@@ -274,315 +235,367 @@ main {
 <div class="app">
 
 <header>
-    <div class="logo">JARVIS</div>
-    <div class="status">● SYSTEM ONLINE</div>
+ <div class="logo">JARVIS</div>
+ <div class="status">● SYSTEM ONLINE</div>
 </header>
 
 <main>
-<section class="center">
+ <section class="center">
 
-    <div class="ring"></div>
-    <div class="ring two"></div>
-    <div class="ring three"></div>
+  <div class="ring"></div>
+  <div class="ring two"></div>
+  <div class="ring three"></div>
 
-    <div id="avatar"></div>
-    <div class="scan"></div>
+  <div id="avatar"></div>
+  <div class="scan"></div>
+  <div id="loader">INITIALIZING JARVIS...</div>
 
-    <div id="loader">INITIALIZING JARVIS...</div>
+  <div class="avatar-label">JARVIS AI ASSISTANT</div>
 
-    <div class="avatar-label">JARVIS AI ASSISTANT</div>
-
-</section>
+ </section>
 </main>
 
-<div id="message">Loading JARVIS Avatar...</div>
+<div id="message">Loading JARVIS...</div>
 
 <div class="chat">
-    <input id="chatInput"
-           type="text"
-           placeholder="Talk to JARVIS..."
-           autocomplete="off">
-    <button id="sendButton">SEND</button>
+ <input id="chatInput" placeholder="Talk to JARVIS..." autocomplete="off">
+ <button id="sendButton">SEND</button>
 </div>
 
 </div>
 
 <script type="module">
 import * as THREE from "three";
-
-import { GLTFLoader } from
-"three/addons/loaders/GLTFLoader.js";
-
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {
-    VRMLoaderPlugin,
-    VRMUtils
-} from
-"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js";
+ VRMLoaderPlugin,
+ VRMUtils
+} from "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js";
 
-const container = document.getElementById("avatar");
-const message = document.getElementById("message");
-const loaderText = document.getElementById("loader");
+const container=document.getElementById("avatar");
+const message=document.getElementById("message");
+const loaderText=document.getElementById("loader");
 
-/* SCENE */
-const scene = new THREE.Scene();
+const scene=new THREE.Scene();
 
-/* CAMERA */
-const camera = new THREE.PerspectiveCamera(
-    32, 1, 0.1, 100
-);
+const camera=new THREE.PerspectiveCamera(32,1,0.1,100);
 
-/* RENDERER */
-const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    antialias: true
+const renderer=new THREE.WebGLRenderer({
+ alpha:true,
+ antialias:true
 });
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.setClearColor(0x000000, 0);
-
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.setClearColor(0x000000,0);
 container.appendChild(renderer.domElement);
 
-/* LIGHTS */
-scene.add(new THREE.HemisphereLight(0xffffff, 0x345566, 2));
+scene.add(new THREE.HemisphereLight(0xffffff,0x345566,2));
 
-const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
-keyLight.position.set(1, 2, 4);
-scene.add(keyLight);
+const light=new THREE.DirectionalLight(0xffffff,2.5);
+light.position.set(1,2,4);
+scene.add(light);
 
-const blueLight = new THREE.PointLight(0x00eaff, 2, 12);
-blueLight.position.set(0, 1, 2);
+const blueLight=new THREE.PointLight(0x00eaff,2,12);
+blueLight.position.set(0,1,2);
 scene.add(blueLight);
 
-/* VARIABLES */
-let currentVRM = null;
-let headBone = null;
-let leftUpperArm = null;
-let rightUpperArm = null;
-let leftLowerArm = null;
-let rightLowerArm = null;
+let currentVRM=null;
+let headBone=null;
 
-let idleTime = 0;
-let blinkTimer = 0;
-let blinkDuration = 0;
-let nextBlink = 2 + Math.random() * 3;
+let leftUpperArm=null;
+let rightUpperArm=null;
+let leftLowerArm=null;
+let rightLowerArm=null;
 
-/* RESIZE */
-function resize() {
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+let idleTime=0;
+let blinkTimer=0;
+let nextBlink=3;
+let blinkDuration=0;
 
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
+function resize(){
+ const w=container.clientWidth;
+ const h=container.clientHeight;
 
-    renderer.setSize(width, height);
+ camera.aspect=w/h;
+ camera.updateProjectionMatrix();
+ renderer.setSize(w,h);
 }
 
+window.addEventListener("resize",resize);
 resize();
-window.addEventListener("resize", resize);
 
-/* VRM LOADER */
-const gltfLoader = new GLTFLoader();
+/*
+ Align a bone's child direction with a desired
+ world-space direction. This avoids guessing
+ the model's local rotation axes.
+*/
+function alignBone(bone,child,targetDirection){
 
-gltfLoader.register(parser => new VRMLoaderPlugin(parser));
+ if(!bone || !child)return;
 
-const MODEL_PATH =
-"./assets/models/viverse_avatar_model_202181.vrm";
+ bone.updateWorldMatrix(true,true);
+
+ const bonePosition=new THREE.Vector3();
+ const childPosition=new THREE.Vector3();
+
+ bone.getWorldPosition(bonePosition);
+ child.getWorldPosition(childPosition);
+
+ const currentDirection=
+  childPosition.sub(bonePosition).normalize();
+
+ const desiredDirection=
+  targetDirection.clone().normalize();
+
+ const correction=new THREE.Quaternion();
+
+ correction.setFromUnitVectors(
+  currentDirection,
+  desiredDirection
+ );
+
+ const worldQuaternion=bone.getWorldQuaternion(
+  new THREE.Quaternion()
+ );
+
+ correction.multiply(worldQuaternion);
+
+ const parentQuaternion=bone.parent
+  ?bone.parent.getWorldQuaternion(new THREE.Quaternion())
+  :new THREE.Quaternion();
+
+ bone.quaternion.copy(
+  parentQuaternion.invert().multiply(correction)
+ );
+
+ bone.updateWorldMatrix(true,true);
+}
+
+/* NATURAL ARM POSITION */
+function setStandingPose(){
+
+ if(!currentVRM)return;
+
+ const h=currentVRM.humanoid;
+
+ leftUpperArm=h.getNormalizedBoneNode("leftUpperArm");
+ rightUpperArm=h.getNormalizedBoneNode("rightUpperArm");
+
+ leftLowerArm=h.getNormalizedBoneNode("leftLowerArm");
+ rightLowerArm=h.getNormalizedBoneNode("rightLowerArm");
+
+ const leftHand=h.getNormalizedBoneNode("leftHand");
+ const rightHand=h.getNormalizedBoneNode("rightHand");
+
+ /*
+  Character's left and right are determined
+  from shoulder positions in world space.
+ */
+ currentVRM.scene.updateMatrixWorld(true);
+
+ if(leftUpperArm && leftLowerArm){
+  const p=new THREE.Vector3();
+  leftUpperArm.getWorldPosition(p);
+
+  const sign=Math.sign(p.x)||-1;
+
+  alignBone(
+   leftUpperArm,
+   leftLowerArm,
+   new THREE.Vector3(sign*0.10,-0.99,0)
+  );
+ }
+
+ if(rightUpperArm && rightLowerArm){
+  const p=new THREE.Vector3();
+  rightUpperArm.getWorldPosition(p);
+
+  const sign=Math.sign(p.x)||1;
+
+  alignBone(
+   rightUpperArm,
+   rightLowerArm,
+   new THREE.Vector3(sign*0.10,-0.99,0)
+  );
+ }
+
+ if(leftLowerArm && leftHand){
+  const p=new THREE.Vector3();
+  leftLowerArm.getWorldPosition(p);
+
+  const sign=Math.sign(p.x)||-1;
+
+  alignBone(
+   leftLowerArm,
+   leftHand,
+   new THREE.Vector3(sign*0.04,-0.99,0)
+  );
+ }
+
+ if(rightLowerArm && rightHand){
+  const p=new THREE.Vector3();
+  rightLowerArm.getWorldPosition(p);
+
+  const sign=Math.sign(p.x)||1;
+
+  alignBone(
+   rightLowerArm,
+   rightHand,
+   new THREE.Vector3(sign*0.04,-0.99,0)
+  );
+ }
+}
+
+/* LOAD VRM */
+const gltfLoader=new GLTFLoader();
+
+gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
+
+/*
+ If you renamed the file to jarvis.vrm,
+ change the path below to:
+ ./assets/models/jarvis.vrm
+*/
+const MODEL_PATH="./assets/models/viverse_avatar_model_202181.vrm";
 
 gltfLoader.load(
-    MODEL_PATH,
+ MODEL_PATH,
 
-    gltf => {
-        const vrm = gltf.userData.vrm;
+ gltf=>{
 
-        if (!vrm) {
-            loaderText.textContent = "VRM DATA NOT FOUND";
-            return;
-        }
+  const vrm=gltf.userData.vrm;
 
-        VRMUtils.removeUnnecessaryVertices(gltf.scene);
-        VRMUtils.removeUnnecessaryJoints(gltf.scene);
+  if(!vrm){
+   loaderText.textContent="VRM DATA NOT FOUND";
+   return;
+  }
 
-        scene.add(vrm.scene);
-        currentVRM = vrm;
+  VRMUtils.removeUnnecessaryVertices(gltf.scene);
+  VRMUtils.removeUnnecessaryJoints(gltf.scene);
 
-        // Face the camera
-        vrm.scene.rotation.y = Math.PI;
+  scene.add(vrm.scene);
+  currentVRM=vrm;
 
-        // Get humanoid bones
-        const humanoid = vrm.humanoid;
+  vrm.scene.rotation.y=Math.PI;
 
-        headBone = humanoid?.getNormalizedBoneNode("head");
+  headBone=vrm.humanoid.getNormalizedBoneNode("head");
 
-        leftUpperArm = humanoid?.getNormalizedBoneNode("leftUpperArm");
-        rightUpperArm = humanoid?.getNormalizedBoneNode("rightUpperArm");
+  // First establish natural standing pose
+  setStandingPose();
 
-        leftLowerArm = humanoid?.getNormalizedBoneNode("leftLowerArm");
-        rightLowerArm = humanoid?.getNormalizedBoneNode("rightLowerArm");
+  vrm.scene.updateMatrixWorld(true);
 
-        /*
-          NATURAL ARM POSE
+  // Fit avatar inside screen
+  const box=new THREE.Box3().setFromObject(vrm.scene);
+  const size=box.getSize(new THREE.Vector3());
+  const center=box.getCenter(new THREE.Vector3());
 
-          Arms are gently lowered from the T-pose.
-          Bone rotations may need model-specific adjustment.
-        */
+  const verticalDistance=
+   (size.y/2)/Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
 
-        if (leftUpperArm) {
-            leftUpperArm.rotation.z = -0.95;
-        }
+  const horizontalFov=
+   2*Math.atan(
+    Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect
+   );
 
-        if (rightUpperArm) {
-            rightUpperArm.rotation.z = 0.95;
-        }
+  const horizontalDistance=
+   (size.x/2)/Math.tan(horizontalFov/2);
 
-        if (leftLowerArm) {
-            leftLowerArm.rotation.z = -0.12;
-        }
+  const distance=Math.max(verticalDistance,horizontalDistance)*1.25;
 
-        if (rightLowerArm) {
-            rightLowerArm.rotation.z = 0.12;
-        }
+  camera.position.set(center.x,center.y,center.z+distance);
+  camera.lookAt(center);
 
-        // Fit complete avatar to screen width AND height
-        vrm.scene.updateMatrixWorld(true);
+  loaderText.style.display="none";
+  message.textContent="JARVIS Avatar Successfully Loaded";
 
-        const box = new THREE.Box3().setFromObject(vrm.scene);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
+  console.log("JARVIS VRM Loaded",vrm);
+ },
 
-        const halfHeight = size.y / 2;
-        const halfWidth = size.x / 2;
+ progress=>{
+  if(progress.total>0){
+   const percent=Math.round(progress.loaded/progress.total*100);
+   loaderText.textContent="LOADING AVATAR "+percent+"%";
+  }
+ },
 
-        const verticalDistance =
-            halfHeight / Math.tan(
-                THREE.MathUtils.degToRad(camera.fov / 2)
-            );
-
-        const horizontalFov =
-            2 * Math.atan(
-                Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-                * camera.aspect
-            );
-
-        const horizontalDistance =
-            halfWidth / Math.tan(horizontalFov / 2);
-
-        const distance =
-            Math.max(verticalDistance, horizontalDistance) * 1.22;
-
-        camera.position.set(
-            center.x,
-            center.y,
-            center.z + distance
-        );
-
-        camera.lookAt(center);
-
-        loaderText.style.display = "none";
-        message.textContent = "JARVIS Avatar Successfully Loaded";
-
-        console.log("JARVIS VRM Loaded", vrm);
-    },
-
-    progress => {
-        if (progress.total > 0) {
-            const percent = Math.round(
-                progress.loaded / progress.total * 100
-            );
-
-            loaderText.textContent = "LOADING AVATAR " + percent + "%";
-        }
-    },
-
-    error => {
-        console.error("VRM ERROR:", error);
-        loaderText.textContent = "AVATAR LOAD ERROR";
-        message.textContent =
-            "Check VRM filename, path and internet connection.";
-    }
+ error=>{
+  console.error(error);
+  loaderText.textContent="AVATAR LOAD ERROR";
+  message.textContent="Check VRM file path and internet connection.";
+ }
 );
 
 /* ANIMATION */
-const clock = new THREE.Clock();
+const clock=new THREE.Clock();
 
-function animate() {
-    requestAnimationFrame(animate);
+function animate(){
 
-    const delta = Math.min(clock.getDelta(), 0.05);
+ requestAnimationFrame(animate);
 
-    if (currentVRM) {
-        idleTime += delta;
-        blinkTimer += delta;
+ const delta=Math.min(clock.getDelta(),0.05);
 
-        // Gentle head movement
-        if (headBone) {
-            headBone.rotation.y =
-                Math.sin(idleTime * 0.7) * 0.035;
+ if(currentVRM){
 
-            headBone.rotation.x =
-                Math.sin(idleTime * 0.5) * 0.018;
-        }
+  idleTime+=delta;
+  blinkTimer+=delta;
 
-        // Small idle arm movement
-        if (leftUpperArm && rightUpperArm) {
-            leftUpperArm.rotation.z =
-                -0.95 + Math.sin(idleTime * 0.8) * 0.012;
+  if(headBone){
+   headBone.rotation.y=Math.sin(idleTime*.7)*.025;
+   headBone.rotation.x=Math.sin(idleTime*.5)*.015;
+  }
 
-            rightUpperArm.rotation.z =
-                0.95 - Math.sin(idleTime * 0.8) * 0.012;
-        }
+  if(blinkTimer>=nextBlink){
+   blinkDuration=.18;
+   blinkTimer=0;
+   nextBlink=2.5+Math.random()*3;
+  }
 
-        // Eye blinking
-        if (blinkTimer >= nextBlink) {
-            blinkDuration = 0.18;
-            blinkTimer = 0;
-            nextBlink = 2 + Math.random() * 3;
-        }
+  let blinkValue=0;
 
-        let blinkValue = 0;
+  if(blinkDuration>0){
+   const progress=(.18-blinkDuration)/.18;
+   blinkValue=Math.sin(progress*Math.PI);
+   blinkDuration-=delta;
+  }
 
-        if (blinkDuration > 0) {
-            const progress = (0.18 - blinkDuration) / 0.18;
-            blinkValue = Math.sin(progress * Math.PI);
-            blinkDuration -= delta;
-        }
+  if(currentVRM.expressionManager){
+   currentVRM.expressionManager.setValue(
+    "blink",
+    Math.max(0,blinkValue)
+   );
+  }
 
-        if (currentVRM.expressionManager) {
-            currentVRM.expressionManager.setValue(
-                "blink",
-                Math.max(0, blinkValue)
-            );
-        }
+  currentVRM.update(delta);
+ }
 
-        currentVRM.update(delta);
-    }
-
-    renderer.render(scene, camera);
+ renderer.render(scene,camera);
 }
 
 animate();
 
 /* TEMPORARY CHAT */
-function sendMessage() {
-    const input = document.getElementById("chatInput");
-    const text = input.value.trim();
+function sendMessage(){
 
-    if (!text) return;
+ const input=document.getElementById("chatInput");
+ const value=input.value.trim();
 
-    message.textContent =
-        "JARVIS Backend connection will be added in the next step.";
+ if(!value)return;
 
-    input.value = "";
+ message.textContent=
+  "JARVIS Backend connection will be added in the next step.";
+
+ input.value="";
 }
 
 document.getElementById("sendButton")
-.addEventListener("click", sendMessage);
+ .addEventListener("click",sendMessage);
 
 document.getElementById("chatInput")
-.addEventListener("keydown", event => {
-    if (event.key === "Enter") sendMessage();
-});
+ .addEventListener("keydown",e=>{
+  if(e.key==="Enter")sendMessage();
+ });
 </script>
-
 </body>
 </html>
