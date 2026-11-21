@@ -11,7 +11,55 @@
 :root{--cyan:#00eaff;--blue:#008cff;--deep:#020817}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--deep);font-family:system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-#background{position:fixed;inset:0;z-index:0;background:linear-gradient(rgba(0,5,20,.15),rgba(0,5,20,.35)),url("./assets/background/command-center.jpg") center/cover no-repeat}
+
+/* ===== UPDATED RESPONSIVE BACKGROUND ONLY ===== */
+#background{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    background-image:
+        linear-gradient(rgba(0,5,20,.18),rgba(0,5,20,.35)),
+        url("./assets/background/command-center.jpg");
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+}
+
+/* Android and iPhone portrait */
+@media(max-width:700px) and (orientation:portrait){
+    #background{
+        background-position:center center;
+        background-size:cover;
+    }
+}
+
+/* Mobile landscape */
+@media(max-width:900px) and (orientation:landscape){
+    #background{
+        background-position:center center;
+        background-size:cover;
+    }
+}
+
+/* Tablet */
+@media(min-width:701px) and (max-width:1100px){
+    #background{
+        background-position:center center;
+        background-size:cover;
+    }
+}
+
+/* Desktop */
+@media(min-width:1101px){
+    #background{
+        background-position:center center;
+        background-size:cover;
+    }
+}
+/* ===== END BACKGROUND UPDATE ===== */
+
 #overlay{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,5,20,.45) 100%)}
 #floor{position:fixed;left:-25%;right:-25%;bottom:0;height:34%;z-index:1;pointer-events:none;
  background:repeating-linear-gradient(90deg,rgba(0,234,255,.18) 0 1px,transparent 1px 64px),repeating-linear-gradient(0deg,rgba(0,234,255,.14) 0 1px,transparent 1px 48px);
@@ -25,7 +73,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavi
 .p3{width:min(16vw,160px);height:min(10vw,100px);left:8%;top:52%;animation-delay:3s}
 @keyframes float{to{transform:translateY(-14px);opacity:.6}}
 @media(max-width:700px){.panel{opacity:.35}.p3{display:none}}
-@media(orientation:portrait){.p1{left:3%;top:5%;width:26vw;height:16vw}.p2{right:3%;top:8%;width:20vw;height:28vw}#background{background-position:50% 40%}}
+@media(orientation:portrait){.p1{left:3%;top:5%;width:26vw;height:16vw}.p2{right:3%;top:8%;width:20vw;height:28vw}}
 .light{position:fixed;width:280px;height:280px;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:2;opacity:.35;animation:lm 6s ease-in-out infinite alternate}
 .light1{background:var(--blue);left:-120px;top:25%}
 .light2{background:var(--cyan);right:-120px;top:45%;animation-delay:2s}
@@ -329,7 +377,7 @@ class Voice {
       else if (c === " " || c === "\n") d = ms * 0.5;
       else if (LABIAL.includes(c)) d = ms * 0.8;
       else if (/[a-z]/.test(c)) { v = "ih"; w = 0.18; }
-      else { v = CYCLE[i % 4]; w = 0.5; d = ms * 1.4; } // non-Latin scripts (e.g. Devanagari)
+      else { v = CYCLE[i % 4]; w = 0.5; d = ms * 1.4; }
       tl.push({ s: t, e: t + d, v, w }); t += d;
     }
     this.timeline = tl; this.idx = 0;
@@ -355,7 +403,7 @@ class Voice {
         if (this.voice) { u.voice = this.voice; u.lang = this.voice.lang; }
         let done = false;
         const go = () => { if (done) return; done = true; clearTimeout(wd); next(); };
-        const wd = setTimeout(go, chunk.length * 130 / this.rate + 4000); // watchdog for engines that never fire onend
+        const wd = setTimeout(go, chunk.length * 130 / this.rate + 4000);
         u.onstart = () => this.plan(chunk);
         u.onboundary = (e) => { if (typeof e.charIndex === "number") this.plan(chunk, e.charIndex); };
         u.onend = go;
@@ -384,7 +432,7 @@ class Animator {
   constructor(vrm, camera) {
     this.vrm = vrm; this.camera = camera; this.t = 0; this.state = "idle";
     const h = vrm.humanoid, em = vrm.expressionManager;
-    this.b = {}; BONES.forEach((n) => (this.b[n] = h.getNormalizedBoneNode(n) || null)); // missing bones skipped safely
+    this.b = {}; BONES.forEach((n) => (this.b[n] = h.getNormalizedBoneNode(n) || null));
     this.has = {}; this.cur = {};
     EXPR.forEach((n) => { if (em && em.getExpression(n)) { this.has[n] = true; this.cur[n] = 0; } });
     const missing = EXPR.filter((n) => !this.has[n]);
@@ -466,7 +514,7 @@ class Animator {
 
     const tg = { blink, happy: speaking ? 0.35 : s === "listening" ? 0.15 : 0.08, relaxed: s === "thinking" ? 0.35 : 0, aa: 0, ih: 0, ou: 0, ee: 0, oh: 0 };
     if (lip && lip.v) {
-      const v = this.has[lip.v] ? lip.v : this.has.aa ? "aa" : null; // fallback if viseme missing
+      const v = this.has[lip.v] ? lip.v : this.has.aa ? "aa" : null;
       if (v) tg[v] = lip.w * (v === lip.v ? 0.9 : 0.6);
     }
     const em = this.vrm.expressionManager;
