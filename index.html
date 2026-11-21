@@ -1,739 +1,962 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#020b12">
-<title>JARVIS AI V5</title>
+
+<title>AI Virtual Assistant</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 
-:root{
- --cyan:#00eaff;
- --dark:#020b12;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-body{
- background:var(--dark);
- color:var(--cyan);
- font-family:Arial,sans-serif;
- overflow:hidden;
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #020916;
+    font-family: Arial, sans-serif;
 }
 
-.app{
- width:100%;
- height:100dvh;
- position:relative;
- overflow:hidden;
- background:
- radial-gradient(ellipse at 50% 48%,
- #073b48 0%,#031923 45%,#02080e 100%);
+/* BACKGROUND */
+
+#background {
+    position: fixed;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            rgba(1, 8, 25, 0.25),
+            rgba(1, 8, 25, 0.45)
+        ),
+        url("./assets/background/command-center.jpg");
+
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
 }
 
-header{
- height:65px;
- padding:0 20px;
- display:flex;
- align-items:center;
- justify-content:space-between;
- border-bottom:1px solid #00eaff55;
- background:#03151ddd;
- position:absolute;
- top:0;
- width:100%;
- z-index:10;
+/* DARK OVERLAY */
+
+#overlay {
+    position: fixed;
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at center,
+            transparent 20%,
+            rgba(0, 5, 18, 0.5) 100%
+        );
+
+    z-index: 1;
+    pointer-events: none;
 }
 
-.logo{
- font-size:25px;
- font-weight:bold;
- letter-spacing:6px;
- text-shadow:0 0 20px var(--cyan);
+/* HOLOGRAM LIGHT */
+
+.hologram {
+    position: fixed;
+
+    width: 300px;
+    height: 300px;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(0, 200, 255, 0.15);
+
+    box-shadow:
+        0 0 30px rgba(0, 180, 255, 0.08),
+        inset 0 0 40px rgba(0, 180, 255, 0.05);
+
+    animation: hologramPulse 5s infinite alternate;
+
+    z-index: 2;
+    pointer-events: none;
 }
 
-.status{
- color:#00ffae;
- font-size:13px;
+.hologram.left {
+    left: -180px;
+    top: 25%;
 }
 
-main{
- position:absolute;
- top:65px;
- bottom:0;
- width:100%;
+.hologram.right {
+    right: -180px;
+    top: 25%;
 }
 
-.center{
- width:100%;
- height:100%;
- position:relative;
- overflow:hidden;
+@keyframes hologramPulse {
+
+    from {
+        opacity: 0.25;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+
 }
 
-#avatar{
- position:absolute;
- inset:0;
- width:100%;
- height:100%;
- z-index:3;
+/* AVATAR */
+
+#avatarContainer {
+
+    position: fixed;
+
+    left: 50%;
+    bottom: 0;
+
+    transform: translateX(-50%);
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 5;
+
+    pointer-events: none;
 }
 
-#avatar canvas{
- display:block;
- width:100%;
- height:100%;
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
-.ring{
- position:absolute;
- width:min(75vw,430px);
- aspect-ratio:1;
- border:1px solid #00eaff66;
- border-radius:50%;
- left:50%;
- top:46%;
- transform:translate(-50%,-50%);
- box-shadow:0 0 35px #00eaff22,
- inset 0 0 35px #00eaff15;
- pointer-events:none;
+/* VOICE VISUALIZER */
+
+#voiceGlow {
+
+    position: fixed;
+
+    width: 260px;
+    height: 260px;
+
+    left: 50%;
+    bottom: -150px;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background: rgba(0, 180, 255, 0.2);
+
+    filter: blur(70px);
+
+    opacity: 0;
+
+    transition: opacity 0.4s;
+
+    z-index: 3;
+
 }
 
-.ring.two{
- width:min(62vw,350px);
- border-style:dashed;
- animation:spin 25s linear infinite;
+body.speaking #voiceGlow {
+    opacity: 1;
 }
 
-.ring.three{
- width:min(48vw,270px);
- opacity:.5;
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+
+    #background {
+        background-position: center;
+    }
+
+    .hologram {
+        width: 180px;
+        height: 180px;
+    }
+
 }
 
-@keyframes spin{
- to{transform:translate(-50%,-50%) rotate(360deg)}
+@media (min-width: 900px) {
+
+    #avatarContainer {
+        width: 65%;
+    }
+
 }
 
-.scan{
- position:absolute;
- width:100%;
- height:2px;
- background:var(--cyan);
- box-shadow:0 0 20px var(--cyan);
- top:10%;
- animation:scan 7s linear infinite;
- opacity:.4;
- z-index:5;
- pointer-events:none;
-}
-
-@keyframes scan{
- 0%{top:10%;opacity:0}
- 50%{opacity:.6}
- 100%{top:90%;opacity:0}
-}
-
-.avatar-label{
- position:absolute;
- bottom:115px;
- width:100%;
- text-align:center;
- font-size:12px;
- letter-spacing:5px;
- text-shadow:0 0 15px var(--cyan);
- z-index:6;
- pointer-events:none;
-}
-
-#message{
- position:absolute;
- bottom:67px;
- left:50%;
- transform:translateX(-50%);
- width:94%;
- text-align:center;
- color:#a8e9ee;
- font-size:14px;
- z-index:8;
-}
-
-.chat{
- position:absolute;
- bottom:10px;
- left:50%;
- transform:translateX(-50%);
- width:min(650px,94%);
- display:flex;
- gap:10px;
- z-index:10;
-}
-
-.chat input{
- flex:1;
- min-width:0;
- padding:15px 18px;
- background:#031b25;
- border:1px solid #00eaff99;
- border-radius:40px;
- outline:none;
- color:white;
- font-size:15px;
-}
-
-.chat input::placeholder{color:#82bfc7}
-
-.chat button{
- padding:0 23px;
- border:1px solid var(--cyan);
- border-radius:40px;
- background:#00414d;
- color:var(--cyan);
- font-size:14px;
- font-weight:bold;
-}
-
-#loader{
- position:absolute;
- top:45%;
- left:50%;
- transform:translate(-50%,-50%);
- z-index:2;
- font-size:13px;
- letter-spacing:2px;
- text-align:center;
-}
-
-@media(max-width:600px){
- header{height:60px;padding:0 16px}
- .logo{font-size:22px}
- .status{font-size:12px}
- main{top:60px}
- .avatar-label{bottom:115px;font-size:10px}
- #message{font-size:13px}
- .chat input{padding:14px;font-size:14px}
- .chat button{padding:0 18px}
-}
-
-@media(max-height:550px){
- .avatar-label{bottom:75px}
- #message{bottom:48px}
- .chat{bottom:4px}
-}
 </style>
 
-<script type="importmap">
-{
- "imports":{
-  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
- }
-}
-</script>
 </head>
 
 <body>
-<div class="app">
 
-<header>
- <div class="logo">JARVIS</div>
- <div class="status">● SYSTEM ONLINE</div>
-</header>
+<div id="background"></div>
 
-<main>
- <section class="center">
+<div id="overlay"></div>
 
-  <div class="ring"></div>
-  <div class="ring two"></div>
-  <div class="ring three"></div>
+<div class="hologram left"></div>
+<div class="hologram right"></div>
 
-  <div id="avatar"></div>
-  <div class="scan"></div>
-  <div id="loader">INITIALIZING JARVIS...</div>
+<div id="avatarContainer"></div>
 
-  <div class="avatar-label">JARVIS AI ASSISTANT</div>
+<div id="voiceGlow"></div>
 
- </section>
-</main>
 
-<div id="message">Loading JARVIS...</div>
+<script type="importmap">
 
-<div class="chat">
- <input id="chatInput" placeholder="Talk to JARVIS..." autocomplete="off">
- <button id="sendButton">SEND</button>
-</div>
+{
+    "imports": {
 
-</div>
+        "three":
+        "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+
+        "three/addons/":
+        "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+
+        "@pixiv/three-vrm":
+        "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js"
+
+    }
+}
+
+</script>
+
 
 <script type="module">
+
 import * as THREE from "three";
-import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 
-import {
- VRMLoaderPlugin,
- VRMUtils
-} from "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-const container=document.getElementById("avatar");
-const message=document.getElementById("message");
-const loaderText=document.getElementById("loader");
+import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 
-const scene=new THREE.Scene();
 
-const camera=new THREE.PerspectiveCamera(32,1,0.1,100);
+/* =====================================
+   CONFIGURATION
+===================================== */
 
-const renderer=new THREE.WebGLRenderer({
- alpha:true,
- antialias:true
+const MODEL_PATH =
+"./assets/models/lady_avatar_v3.vrm";
+
+const API_URL =
+"https://aryan-ai-backend-v2.vercel.app/api/chat";
+
+const CHARACTER = "AIRA";
+
+const LANGUAGE = "en-IN";
+
+
+/* =====================================
+   THREE JS SETUP
+===================================== */
+
+const container =
+document.getElementById("avatarContainer");
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+35,
+window.innerWidth / window.innerHeight,
+0.1,
+100
+);
+
+camera.position.set(0, 1.35, 2.8);
+
+
+const renderer = new THREE.WebGLRenderer({
+
+    alpha: true,
+
+    antialias: true,
+
+    powerPreference: "high-performance"
+
 });
 
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.setClearColor(0x000000,0);
+renderer.setPixelRatio(
+Math.min(window.devicePixelRatio, 1.7)
+);
+
+renderer.setSize(
+window.innerWidth,
+window.innerHeight
+);
+
+renderer.outputColorSpace =
+THREE.SRGBColorSpace;
+
+renderer.toneMapping =
+THREE.ACESFilmicToneMapping;
+
+renderer.toneMappingExposure = 1.15;
+
 container.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x345566,2));
 
-const light=new THREE.DirectionalLight(0xffffff,2.5);
-light.position.set(1,2,4);
-scene.add(light);
+/* =====================================
+   LIGHTING
+===================================== */
 
-const blueLight=new THREE.PointLight(0x00eaff,2,12);
-blueLight.position.set(0,1,2);
+const ambientLight = new THREE.AmbientLight(
+0xffffff,
+1.5
+);
+
+scene.add(ambientLight);
+
+
+const frontLight = new THREE.DirectionalLight(
+0xffffff,
+2.5
+);
+
+frontLight.position.set(0, 3, 5);
+
+scene.add(frontLight);
+
+
+const blueLight = new THREE.PointLight(
+0x00bfff,
+30,
+10
+);
+
+blueLight.position.set(-2, 2, 2);
+
 scene.add(blueLight);
 
-let currentVRM=null;
-let headBone=null;
 
-let leftHand=null;
-let rightHand=null;
+const purpleLight = new THREE.PointLight(
+0x6b4cff,
+20,
+10
+);
 
-let idleTime=0;
-let blinkTimer=0;
-let nextBlink=3;
-let blinkDuration=0;
+purpleLight.position.set(2, 1, -2);
 
-function resize(){
+scene.add(purpleLight);
 
- const w=container.clientWidth;
- const h=container.clientHeight;
 
- camera.aspect=w/h;
- camera.updateProjectionMatrix();
+/* =====================================
+   VRM MODEL
+===================================== */
 
- renderer.setSize(w,h);
-}
+let currentVRM = null;
 
-window.addEventListener("resize",resize);
-resize();
+let headBone = null;
 
+let neckBone = null;
 
-/* ==========================================
-   JARVIS V5 - NATURAL HUMAN STANDING POSE
-========================================== */
+let chestBone = null;
 
-function getBone(name){
+let leftArm = null;
 
- return currentVRM?.humanoid?.getNormalizedBoneNode(name) || null;
+let rightArm = null;
 
-}
+let expressionManager = null;
 
-function alignBoneToDirection(bone,child,direction){
+let modelReady = false;
 
- if(!bone || !child)return;
 
- bone.updateWorldMatrix(true,true);
+const loader = new GLTFLoader();
 
- const bonePosition=new THREE.Vector3();
- const childPosition=new THREE.Vector3();
+loader.register((parser) => {
 
- bone.getWorldPosition(bonePosition);
- child.getWorldPosition(childPosition);
+    return new VRMLoaderPlugin(parser);
 
- const currentDirection=childPosition
-  .sub(bonePosition)
-  .normalize();
+});
 
- const desiredDirection=direction.clone().normalize();
 
- const correction=new THREE.Quaternion()
-  .setFromUnitVectors(currentDirection,desiredDirection);
+loader.load(
 
- const worldRotation=bone.getWorldQuaternion(
-  new THREE.Quaternion()
- );
+MODEL_PATH,
 
- const desiredWorldRotation=correction.multiply(worldRotation);
+(gltf) => {
 
- const parentRotation=bone.parent
-  ?bone.parent.getWorldQuaternion(new THREE.Quaternion())
-  :new THREE.Quaternion();
+    const vrm = gltf.userData.vrm;
 
- bone.quaternion.copy(
-  parentRotation.invert().multiply(desiredWorldRotation)
- );
+    currentVRM = vrm;
 
- bone.updateWorldMatrix(true,true);
-}
+    VRMUtils.removeUnnecessaryVertices(
+        gltf.scene
+    );
 
+    VRMUtils.removeUnnecessaryJoints(
+        gltf.scene
+    );
 
-function setFingerRelaxed(side){
+    scene.add(vrm.scene);
 
- const fingers=[
-  "ThumbProximal",
-  "ThumbIntermediate",
-  "ThumbDistal",
 
-  "IndexProximal",
-  "IndexIntermediate",
-  "IndexDistal",
+    /* HUMANOID BONES */
 
-  "MiddleProximal",
-  "MiddleIntermediate",
-  "MiddleDistal",
+    const humanoid = vrm.humanoid;
 
-  "RingProximal",
-  "RingIntermediate",
-  "RingDistal",
+    headBone = humanoid.getNormalizedBoneNode(
+        "head"
+    );
 
-  "LittleProximal",
-  "LittleIntermediate",
-  "LittleDistal"
- ];
+    neckBone = humanoid.getNormalizedBoneNode(
+        "neck"
+    );
 
- fingers.forEach(part=>{
+    chestBone = humanoid.getNormalizedBoneNode(
+        "chest"
+    );
 
-  const bone=getBone(side+part);
+    leftArm = humanoid.getNormalizedBoneNode(
+        "leftUpperArm"
+    );
 
-  if(!bone)return;
+    rightArm = humanoid.getNormalizedBoneNode(
+        "rightUpperArm"
+    );
 
-  const isThumb=part.startsWith("Thumb");
 
-  bone.rotation.x+=isThumb?0.04:0.10;
+    expressionManager =
+    vrm.expressionManager;
 
- });
-}
 
+    /* MODEL POSITION */
 
-function setStandingPose(){
+    vrm.scene.position.set(
+        0,
+        -1.0,
+        0
+    );
 
- if(!currentVRM)return;
+    vrm.scene.rotation.y = Math.PI;
 
- const leftShoulder=getBone("leftShoulder");
- const rightShoulder=getBone("rightShoulder");
 
- const leftUpperArm=getBone("leftUpperArm");
- const rightUpperArm=getBone("rightUpperArm");
+    modelReady = true;
 
- const leftLowerArm=getBone("leftLowerArm");
- const rightLowerArm=getBone("rightLowerArm");
+    console.log("VRM Loaded Successfully");
 
- leftHand=getBone("leftHand");
- rightHand=getBone("rightHand");
 
- currentVRM.scene.updateMatrixWorld(true);
+    /* CAMERA HALF BODY */
 
- /* SHOULDER POSITION */
+    camera.position.set(
+        0,
+        1.35,
+        2.8
+    );
 
- if(leftShoulder && leftUpperArm){
+},
 
-  alignBoneToDirection(
-   leftShoulder,
-   leftUpperArm,
-   new THREE.Vector3(-0.05,-1,0)
-  );
+undefined,
 
- }
+(error) => {
 
- if(rightShoulder && rightUpperArm){
-
-  alignBoneToDirection(
-   rightShoulder,
-   rightUpperArm,
-   new THREE.Vector3(0.05,-1,0)
-  );
-
- }
-
- currentVRM.scene.updateMatrixWorld(true);
-
-
- /* UPPER ARMS */
-
- if(leftUpperArm && leftLowerArm){
-
-  alignBoneToDirection(
-   leftUpperArm,
-   leftLowerArm,
-   new THREE.Vector3(-0.22,-0.96,0.10)
-  );
-
- }
-
- if(rightUpperArm && rightLowerArm){
-
-  alignBoneToDirection(
-   rightUpperArm,
-   rightLowerArm,
-   new THREE.Vector3(0.22,-0.96,0.10)
-  );
-
- }
-
- currentVRM.scene.updateMatrixWorld(true);
-
-
- /* FOREARMS */
-
- if(leftLowerArm && leftHand){
-
-  alignBoneToDirection(
-   leftLowerArm,
-   leftHand,
-   new THREE.Vector3(-0.12,-0.98,0.12)
-  );
-
- }
-
- if(rightLowerArm && rightHand){
-
-  alignBoneToDirection(
-   rightLowerArm,
-   rightHand,
-   new THREE.Vector3(0.12,-0.98,0.12)
-  );
-
- }
-
- currentVRM.scene.updateMatrixWorld(true);
-
-
- /* RELAXED FINGERS */
-
- setFingerRelaxed("left");
- setFingerRelaxed("right");
-
- currentVRM.scene.updateMatrixWorld(true);
-
- console.log("JARVIS Natural Standing Pose Applied");
+    console.error("VRM Loading Error:", error);
 
 }
-
-
-/* ==========================================
-   LOAD VRM CHARACTER
-========================================== */
-
-const gltfLoader=new GLTFLoader();
-
-gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
-
-const MODEL_PATH="./assets/models/viverse_avatar_model_217613.vrm";
-
-gltfLoader.load(
-
- MODEL_PATH,
-
- gltf=>{
-
-  const vrm=gltf.userData.vrm;
-
-  if(!vrm){
-
-   loaderText.textContent="VRM DATA NOT FOUND";
-   return;
-
-  }
-
-  VRMUtils.removeUnnecessaryVertices(gltf.scene);
-  VRMUtils.removeUnnecessaryJoints(gltf.scene);
-
-  scene.add(vrm.scene);
-
-  currentVRM=vrm;
-
-  vrm.scene.rotation.y=Math.PI;
-
-  headBone=vrm.humanoid.getNormalizedBoneNode("head");
-
-
-  /* APPLY NATURAL STANDING POSE */
-
-  setStandingPose();
-
-  requestAnimationFrame(()=>{
-
-   setStandingPose();
-
-  });
-
-
-  vrm.scene.updateMatrixWorld(true);
-
-
-  /* FIT AVATAR INSIDE SCREEN */
-
-  const box=new THREE.Box3().setFromObject(vrm.scene);
-
-  const size=box.getSize(new THREE.Vector3());
-
-  const center=box.getCenter(new THREE.Vector3());
-
-  const verticalDistance=
-   (size.y/2)/Math.tan(
-    THREE.MathUtils.degToRad(camera.fov/2)
-   );
-
-  const horizontalFov=
-   2*Math.atan(
-    Math.tan(
-     THREE.MathUtils.degToRad(camera.fov/2)
-    )*camera.aspect
-   );
-
-  const horizontalDistance=
-   (size.x/2)/Math.tan(horizontalFov/2);
-
-  const distance=Math.max(
-   verticalDistance,
-   horizontalDistance
-  )*1.25;
-
-  camera.position.set(
-   center.x,
-   center.y,
-   center.z+distance
-  );
-
-  camera.lookAt(center);
-
-  loaderText.style.display="none";
-
-  message.textContent="JARVIS Avatar Successfully Loaded";
-
-  console.log("JARVIS VRM Loaded",vrm);
-
- },
-
- progress=>{
-
-  if(progress.total>0){
-
-   const percent=Math.round(
-    progress.loaded/progress.total*100
-   );
-
-   loaderText.textContent="LOADING AVATAR "+percent+"%";
-
-  }
-
- },
-
- error=>{
-
-  console.error(error);
-
-  loaderText.textContent="AVATAR LOAD ERROR";
-
-  message.textContent="Check VRM file path and internet connection.";
-
- }
 
 );
 
 
-/* ==========================================
-   ANIMATION
-========================================== */
+/* =====================================
+   NATURAL ANIMATION
+===================================== */
 
-const clock=new THREE.Clock();
+const clock = new THREE.Clock();
 
-function animate(){
+let talking = false;
 
- requestAnimationFrame(animate);
+let blinkValue = 0;
 
- const delta=Math.min(clock.getDelta(),0.05);
+let nextBlink = 3;
 
- if(currentVRM){
+let blinkTimer = 0;
 
-  idleTime+=delta;
-  blinkTimer+=delta;
+let animationTime = 0;
 
-  if(headBone){
 
-   headBone.rotation.y=Math.sin(idleTime*.7)*.025;
-   headBone.rotation.x=Math.sin(idleTime*.5)*.015;
+function animateAvatar() {
 
-  }
+    requestAnimationFrame(animateAvatar);
 
-  if(blinkTimer>=nextBlink){
+    const delta = Math.min(
+        clock.getDelta(),
+        0.05
+    );
 
-   blinkDuration=.18;
-   blinkTimer=0;
-   nextBlink=2.5+Math.random()*3;
+    animationTime += delta;
 
-  }
 
-  let blinkValue=0;
+    if (currentVRM && modelReady) {
 
-  if(blinkDuration>0){
+        /* BREATHING */
 
-   const progress=(.18-blinkDuration)/.18;
+        const breathing =
+        Math.sin(animationTime * 1.5) * 0.008;
 
-   blinkValue=Math.sin(progress*Math.PI);
+        currentVRM.scene.position.y =
+        -1.0 + breathing;
 
-   blinkDuration-=delta;
 
-  }
+        /* HEAD MOVEMENT */
 
-  if(currentVRM.expressionManager){
+        if (headBone) {
 
-   currentVRM.expressionManager.setValue(
-    "blink",
-    Math.max(0,blinkValue)
-   );
+            headBone.rotation.y =
+            Math.sin(animationTime * 0.5) * 0.035;
 
-  }
+            headBone.rotation.x =
+            Math.sin(animationTime * 0.8) * 0.018;
 
-  currentVRM.update(delta);
+        }
 
- }
 
- renderer.render(scene,camera);
+        /* NECK MOVEMENT */
+
+        if (neckBone) {
+
+            neckBone.rotation.x =
+            Math.sin(animationTime * 0.7) * 0.01;
+
+        }
+
+
+        /* BLINKING */
+
+        blinkTimer += delta;
+
+        if (blinkTimer > nextBlink) {
+
+            blinkValue = 1;
+
+            nextBlink =
+            0.12 + Math.random() * 0.08;
+
+            blinkTimer = -0.15;
+
+        }
+
+        if (blinkValue > 0) {
+
+            blinkValue -= delta * 7;
+
+            if (blinkValue < 0) {
+                blinkValue = 0;
+            }
+
+        }
+
+
+        if (expressionManager) {
+
+            expressionManager.setValue(
+                "blink",
+                blinkValue
+            );
+
+        }
+
+
+        /* SPEAKING MOUTH ANIMATION */
+
+        if (talking && expressionManager) {
+
+            const mouth =
+            0.2 +
+            Math.abs(Math.sin(animationTime * 13)) * 0.45;
+
+            expressionManager.setValue(
+                "aa",
+                mouth
+            );
+
+        } else if (expressionManager) {
+
+            expressionManager.setValue(
+                "aa",
+                0
+            );
+
+        }
+
+
+        /* AUTOMATIC HAND GESTURE */
+
+        if (leftArm && rightArm) {
+
+            const gesture =
+            talking ? 0.08 : 0.015;
+
+            leftArm.rotation.z =
+            0.12 + Math.sin(animationTime * 1.4) * gesture;
+
+            rightArm.rotation.z =
+            -0.12 - Math.sin(animationTime * 1.4) * gesture;
+
+        }
+
+
+        currentVRM.update(delta);
+
+    }
+
+    renderer.render(scene, camera);
 
 }
 
-animate();
+animateAvatar();
 
 
-/* ==========================================
-   TEMPORARY CHAT
-========================================== */
+/* =====================================
+   RESIZE
+===================================== */
 
-function sendMessage(){
+window.addEventListener(
+"resize",
+() => {
 
- const input=document.getElementById("chatInput");
+    camera.aspect =
+    window.innerWidth / window.innerHeight;
 
- const value=input.value.trim();
+    camera.updateProjectionMatrix();
 
- if(!value)return;
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
 
- message.textContent=
-  "JARVIS Backend connection will be added in the next step.";
+    renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 1.7)
+    );
 
- input.value="";
+});
+
+
+/* =====================================
+   AI CHAT BACKEND
+===================================== */
+
+let conversation = [];
+
+async function sendToAI(message) {
+
+    try {
+
+        const response = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                message: message,
+
+                messages: conversation,
+
+                character: CHARACTER,
+
+                language: LANGUAGE
+
+            })
+
+        });
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Backend Error: " + response.status
+            );
+
+        }
+
+
+        const data = await response.json();
+
+        if (!data.success || !data.reply) {
+
+            throw new Error(
+                "Invalid AI response"
+            );
+
+        }
+
+
+        conversation.push({
+
+            role: "user",
+
+            content: message
+
+        });
+
+        conversation.push({
+
+            role: "assistant",
+
+            content: data.reply
+
+        });
+
+
+        if (conversation.length > 20) {
+
+            conversation =
+            conversation.slice(-20);
+
+        }
+
+
+        speakResponse(data.reply);
+
+    }
+
+    catch(error) {
+
+        console.error("AI Error:", error);
+
+        speakResponse(
+            "Sorry, I am having trouble connecting. Please try again."
+        );
+
+    }
 
 }
 
-document.getElementById("sendButton")
- .addEventListener("click",sendMessage);
 
-document.getElementById("chatInput")
- .addEventListener("keydown",e=>{
+/* =====================================
+   TEXT TO SPEECH
+===================================== */
 
-  if(e.key==="Enter")sendMessage();
+function speakResponse(text) {
 
- });
+    if (!("speechSynthesis" in window)) {
+        return;
+    }
+
+    speechSynthesis.cancel();
+
+    const utterance =
+    new SpeechSynthesisUtterance(text);
+
+    utterance.lang = LANGUAGE;
+
+    utterance.rate = 1;
+
+    utterance.pitch = 1.05;
+
+    utterance.volume = 1;
+
+
+    utterance.onstart = () => {
+
+        talking = true;
+
+        document.body.classList.add(
+            "speaking"
+        );
+
+    };
+
+
+    utterance.onend = () => {
+
+        talking = false;
+
+        document.body.classList.remove(
+            "speaking"
+        );
+
+    };
+
+
+    utterance.onerror = () => {
+
+        talking = false;
+
+        document.body.classList.remove(
+            "speaking"
+        );
+
+    };
+
+
+    speechSynthesis.speak(utterance);
+
+}
+
+
+/* =====================================
+   SPEECH RECOGNITION
+===================================== */
+
+const SpeechRecognition =
+window.SpeechRecognition ||
+window.webkitSpeechRecognition;
+
+let recognition = null;
+
+let recognitionActive = false;
+
+let restartTimer = null;
+
+
+if (SpeechRecognition) {
+
+    recognition = new SpeechRecognition();
+
+    recognition.lang = LANGUAGE;
+
+    recognition.continuous = true;
+
+    recognition.interimResults = false;
+
+
+    recognition.onstart = () => {
+
+        recognitionActive = true;
+
+        console.log("Microphone Listening");
+
+    };
+
+
+    recognition.onresult = (event) => {
+
+        const result =
+        event.results[event.results.length - 1];
+
+        if (!result.isFinal) {
+            return;
+        }
+
+        const message =
+        result[0].transcript.trim();
+
+        if (!message) {
+            return;
+        }
+
+        console.log("User:", message);
+
+        speechSynthesis.cancel();
+
+        talking = false;
+
+        sendToAI(message);
+
+    };
+
+
+    recognition.onerror = (event) => {
+
+        console.log(
+            "Speech Recognition Error:",
+            event.error
+        );
+
+    };
+
+
+    recognition.onend = () => {
+
+        recognitionActive = false;
+
+        clearTimeout(restartTimer);
+
+        restartTimer = setTimeout(
+            startListening,
+            1000
+        );
+
+    };
+
+}
+
+
+/* =====================================
+   AUTOMATIC MICROPHONE
+===================================== */
+
+async function startListening() {
+
+    if (!recognition) {
+
+        console.error(
+            "Speech Recognition is not supported in this browser."
+        );
+
+        return;
+
+    }
+
+    if (recognitionActive) {
+        return;
+    }
+
+    try {
+
+        await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        recognition.start();
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "Microphone Permission Error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================
+   AUTOMATIC START
+===================================== */
+
+window.addEventListener(
+"load",
+() => {
+
+    setTimeout(() => {
+
+        startListening();
+
+    }, 1500);
+
+});
+
+
+/* =====================================
+   CLEANUP
+===================================== */
+
+window.addEventListener(
+"beforeunload",
+() => {
+
+    clearTimeout(restartTimer);
+
+    if (recognition) {
+
+        recognition.stop();
+
+    }
+
+    speechSynthesis.cancel();
+
+});
 
 </script>
+
 </body>
 </html>
