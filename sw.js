@@ -1,50 +1,145 @@
-/* J.A.R.V.I.S service worker — app shell cache so the installed app opens fast and works offline.
-   AI replies, weather and ping always go to the network (never cached). */
-const VERSION = 'jarvis-v2';
+/* J.A.R.V.I.S Service Worker
+   App shell + background + VRM model caching.
+   AI replies, weather and API requests always use network.
+*/
+
+const VERSION = 'jarvis-v3';
+
 const SHELL = [
-  './', 'index.html', 'manifest.json', 'favicon.ico',
-  'icons/icon-192.png', 'icons/icon-512.png',
-  'icons/maskable-192.png', 'icons/maskable-512.png',
-  'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/favicon-16.png'
+  './',
+  'index.html',
+  'manifest.json',
+  'favicon.ico',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/maskable-192.png',
+  'icons/maskable-512.png',
+  'icons/apple-touch-icon.png',
+  'icons/favicon-32.png',
+  'icons/favicon-16.png'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(
+// Important assets: cached automatically on first successful load
+const IMPORTANT_ASSETS = [
+  './assets/background/command-center.jpg',
+  './assets/models/lady_avatar_v3.vrm'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
     caches.open(VERSION)
-      .then(c => Promise.allSettled(SHELL.map(u => c.add(u))))   // one missing file must not break install
+      .then(cache =>
+        Promise.allSettled(
+          SHELL.map(file => cache.add(file))
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== VERSION)
+            .map(key => caches.delete(key))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;          // backend, weather, fonts: straight to network
+self.addEventListener('fetch', event => {
+  const request = event.request;
 
-  // Page loads: network first (so updates show up), cached copy when offline
-  if (req.mode === 'navigate'){
-    e.respondWith(
-      fetch(req).then(res => {
-        const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); return res;
-      }).catch(() => caches.match('index.html').then(r => r || caches.match('./')))
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  // External requests: never cache
+  if (url.origin !== self.location.origin) return;
+
+  // Page navigation: network first, offline fallback
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response.ok) {
+            const copy = response.clone();
+
+            caches.open(VERSION).then(cache =>
+              cache.put('./index.html', copy)
+            );
+          }
+
+          return response;
+        })
+        .catch(async () => {
+          return (
+            await caches.match('./index.html') ||
+            await caches.match('./')
+          );
+        })
     );
+
     return;
   }
 
-  // Icons / manifest / other same-origin files: network first (so new icons show up), cache when offline
-  e.respondWith(
-    fetch(req).then(res => {
-      if (res && res.ok){ const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
-      return res;
-    }).catch(() => caches.match(req))
+  // Background image + VRM model: cache first
+  const isImportantAsset = IMPORTANT_ASSETS.some(path => {
+    return url.pathname.endsWith(
+      new URL(path, self.location.href).pathname
+    );
+  });
+
+  if (isImportantAsset) {
+    event.respondWith(
+      caches.match(request).then(async cached => {
+        if (cached) return cached;
+
+        try {
+          const response = await fetch(request);
+
+          if (response.ok) {
+            const copy = response.clone();
+
+            const cache = await caches.open(VERSION);
+            await cache.put(request, copy);
+          }
+
+          return response;
+
+        } catch (error) {
+          return new Response(
+            'Asset unavailable offline',
+            { status: 503 }
+          );
+        }
+      })
+    );
+
+    return;
+  }
+
+  // Other same-origin files: network first, cache fallback
+  event.respondWith(
+    fetch(request)
+      .then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+
+          caches.open(VERSION).then(cache =>
+            cache.put(request, copy)
+          );
+        }
+
+        return response;
+      })
+      .catch(async () => {
+        return await caches.match(request) ||
+          new Response('Offline', { status: 503 });
+      })
   );
 });
