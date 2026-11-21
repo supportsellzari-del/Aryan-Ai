@@ -186,7 +186,11 @@ function measure(vrm) {
     try { maxY = new THREE.Box3().setFromObject(root).max.y; } catch (e) {}
     const lh = wp("leftHand"), rh = wp("rightHand");
     const handY = lh && rh ? Math.min(lh.y, rh.y) : NaN;
-    return regionFromBones(hips.y, head.y, span, maxY, handY);
+    // Lowest fingertip joint (finger bones are optional in VRM)
+    const tips = [];
+    ["Thumb", "Index", "Middle", "Ring", "Little"].forEach((f) => ["left", "right"].forEach((sd) => { const v = wp(sd + f + "Distal"); if (v) tips.push(v.y); }));
+    const fingerY = tips.length ? Math.min.apply(null, tips) : NaN;
+    return regionFromBones(hips.y, head.y, span, maxY, handY, fingerY);
   }
   // Fallback: bounding box
   let box = new THREE.Box3().setFromObject(root);
@@ -198,13 +202,15 @@ function measure(vrm) {
 }
 
 // Head-to-waist region from the head and hips bones.
-function regionFromBones(hipsY, headY, span, maxY, handY) {
+function regionFromBones(hipsY, headY, span, maxY, handY, fingerY) {
   const up = headY - hipsY;
   // Head top: real mesh top (hair, goggles, bun) when sane, else a proportional estimate.
   let top = headY + up * 0.5;
   if (Number.isFinite(maxY)) top = Math.min(Math.max(maxY + up * 0.02, headY + up * 0.3), headY + up * 0.9);
   let bottom = hipsY + up * 0.08; // just below the belt line = waist
-  if (Number.isFinite(handY)) bottom = Math.min(bottom, handY - up * 0.22); // keep the hands fully in frame
+  // Keep hands and fingers fully in frame: wrist minus a full hand length, or the lowest finger joint minus the fingertip.
+  if (Number.isFinite(handY)) bottom = Math.min(bottom, handY - up * 0.4);
+  if (Number.isFinite(fingerY)) bottom = Math.min(bottom, fingerY - up * 0.1);
   return { regionH: top - bottom, regionW: span + up * 0.62, centerY: (top + bottom) / 2 };
 }
 
