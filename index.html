@@ -227,9 +227,10 @@ function computeFraming(m, fovDeg, w, h, top, bottom) {
   const t = Math.tan(fovDeg * Math.PI / 360);
   const aspect = w / h;
   const uh = Math.max(h - top - bottom, h * 0.5);
-  const margin = aspect >= 1 ? 1.14 : 1.06;
-  const dV = (m.regionH * margin / 2) / t * (h / uh);
-  const dH = (m.regionW * margin / 2) / (t * aspect);
+  const mh = aspect >= 1 ? 1.14 : 1.06;  // horizontal breathing room
+  const mv = aspect >= 1 ? 1.14 : 1.14;  // vertical breathing room: keeps head and fingers off the edges on short screens
+  const dV = (m.regionH * mv / 2) / t * (h / uh);
+  const dH = (m.regionW * mh / 2) / (t * aspect);
   const d = Math.max(dV, dH);
   const wpp = (2 * d * t) / h;                 // world units per screen pixel
   const regionPx = m.regionH / wpp;
