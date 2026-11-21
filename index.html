@@ -34,8 +34,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavi
 #avatarContainer canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #voiceGlow{position:fixed;width:300px;height:200px;left:50%;bottom:-120px;transform:translateX(-50%);background:var(--cyan);filter:blur(90px);opacity:0;transition:opacity .4s;z-index:3;pointer-events:none}
 body.speaking #voiceGlow{opacity:.55}
-#gate{position:fixed;inset:0;z-index:20;border:0;background:rgba(2,8,23,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
- display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#bfefff;font-size:15px;cursor:pointer}
+#gate{position:fixed;inset:0;z-index:20;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:14px;padding-bottom:calc(8vh + env(safe-area-inset-bottom,0px));color:#bfefff;font-size:15px;text-shadow:0 0 8px #000;cursor:pointer}
 #gate i{width:64px;height:64px;border-radius:50%;border:2px solid var(--cyan);box-shadow:0 0 30px var(--cyan);animation:pulse 1.8s ease-in-out infinite}
 #gate[hidden]{display:none}
 @keyframes pulse{50%{transform:scale(1.18);opacity:.55}}
@@ -175,22 +174,30 @@ function loadAvatar(stage, onProgress) {
 function measure(vrm) {
   const root = vrm.scene;
   root.updateMatrixWorld(true);
-  let box = new THREE.Box3().setFromObject(root);
-  const H0 = box.max.y - box.min.y;
-  if (!Number.isFinite(H0) || H0 < 0.01) throw new Error("VRM has invalid dimensions");
-  root.position.y -= box.min.y;
-  root.updateMatrixWorld(true);
   const wp = (n) => { const o = vrm.humanoid.getNormalizedBoneNode(n); return o ? o.getWorldPosition(new THREE.Vector3()) : null; };
-  const hips0 = wp("hips");
-  root.position.x -= hips0 ? hips0.x : (box.min.x + box.max.x) / 2;
-  root.updateMatrixWorld(true);
-  box = new THREE.Box3().setFromObject(root);
-  const H = box.max.y - box.min.y;
-  const hips = wp("hips");
-  const hipsY = hips ? hips.y : H * 0.55;
+  const hips = wp("hips"), head = wp("head");
   const l = wp("leftUpperArm"), r = wp("rightUpperArm");
-  const span = l && r ? Math.abs(l.x - r.x) : H * 0.22;
-  return regionFromRig(H, box.max.y, hipsY, span);
+  if (hips && head && head.y - hips.y > 0.05) {
+    // Bone-based: independent of hair, hidden meshes or odd model scale.
+    root.position.x -= hips.x;
+    root.updateMatrixWorld(true);
+    const span = l && r ? Math.abs(l.x - r.x) : (head.y - hips.y) * 0.65;
+    return regionFromBones(hips.y, head.y, span);
+  }
+  // Fallback: bounding box
+  let box = new THREE.Box3().setFromObject(root);
+  const H = box.max.y - box.min.y;
+  if (!Number.isFinite(H) || H < 0.01) throw new Error("VRM has invalid dimensions");
+  root.position.x -= (box.min.x + box.max.x) / 2;
+  root.updateMatrixWorld(true);
+  return regionFromRig(H, box.max.y, box.min.y + H * 0.55, H * 0.22);
+}
+
+// Head-to-waist region from the head and hips bones.
+function regionFromBones(hipsY, headY, span) {
+  const up = headY - hipsY;
+  const top = headY + up * 0.34, bottom = hipsY - up * 0.03;
+  return { regionH: top - bottom, regionW: span + up * 0.45, centerY: (top + bottom) / 2 };
 }
 
 // Head-to-waist region. Width = shoulder span + room for the arms hanging at the sides.
@@ -221,6 +228,7 @@ function applyFraming(camera, m, v) {
   const r = computeFraming(m, camera.fov, v.w, v.h, v.top, v.bottom);
   camera.position.set(0, r.targetY, r.d);
   camera.lookAt(0, r.targetY, 0);
+  camera.userData.framing = r;
   camera.near = r.d / 50; camera.far = r.d * 20;
   camera.updateProjectionMatrix();
 }
@@ -372,18 +380,22 @@ class Animator {
     if (vrm.scene.parent) vrm.scene.parent.add(this.gaze);
     if (vrm.lookAt) vrm.lookAt.target = this.gaze;
     this.head = { x: 0, y: 0, z: 0 };
+    const sgn = (v, d) => (Math.abs(v) > 1e-5 ? Math.sign(v) : d);
+    const lla = this.b.leftLowerArm, rla = this.b.rightLowerArm, toes = h.getNormalizedBoneNode("leftToes");
+    this.sL = lla ? sgn(lla.position.x, 1) : 1; this.sR = rla ? sgn(rla.position.x, -1) : -1;
+    this.front = toes && Math.abs(toes.position.z) > 1e-4 ? Math.sign(toes.position.z) : (vrm.meta && vrm.meta.metaVersion === "0" ? -1 : 1);
     this.q = this.rest(); this.p = this.rest();
     this.gestureAt = 1; this.gestureOn = false; this.mouth = 0;
   }
-  rest() { return { luz: -1.25, ruz: 1.25, lux: 0, rux: 0, lly: -0.14, rly: 0.14, hand: 0 }; }
+  rest() { const a = 1.25, e = 0.14; return { luz: -this.sL * a, ruz: -this.sR * a, lux: 0, rux: 0, lly: -this.front * this.sL * e, rly: -this.front * this.sR * e, hand: 0 }; }
 
   newGesture() {
-    const q = this.rest(), right = Math.random() < 0.65, sg = right ? 1 : -1, c = right ? "r" : "l";
-    q[c + "uz"] = sg * rnd(0.85, 1.0);
+    const q = this.rest(), right = Math.random() < 0.65, s = right ? this.sR : this.sL, c = right ? "r" : "l";
+    q[c + "uz"] = -s * rnd(0.85, 1.0);
     q[c + "ux"] = rnd(-0.3, 0.1);
-    q[c + "ly"] = sg * rnd(0.7, 1.25);
-    q.hand = sg;
-    if (Math.random() < 0.3) { q.luz = -0.9; q.lly = -0.9; q.ruz = 0.9; q.rly = 0.9; q.hand = 2; } // both hands
+    q[c + "ly"] = -this.front * s * rnd(0.7, 1.25);
+    q.hand = right ? 1 : -1;
+    if (Math.random() < 0.3) { q.luz = -this.sL * 0.9; q.lly = -this.front * this.sL * 0.9; q.ruz = -this.sR * 0.9; q.rly = -this.front * this.sR * 0.9; q.hand = 2; }
     this.q = q;
   }
 
@@ -468,6 +480,7 @@ async function init() {
   try { vrm = await loadAvatar(stage); }
   catch (e) { console.error(e); gate.hidden = true; toast(e.message, 12000); return; }
   animator = new Animator(vrm, stage.camera);
+  if (/[?&]debug/.test(location.search)) startDebug();
 
   voice = new Voice({
     onTranscript: handleTranscript,
@@ -489,6 +502,23 @@ async function init() {
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", cleanup);
   last = performance.now(); loop(last);
+}
+
+let dbgTimer = 0;
+function startDebug() {
+  const pre = document.createElement("pre");
+  pre.style.cssText = "position:fixed;left:6px;top:calc(6px + env(safe-area-inset-top,0px));z-index:40;color:#7CFF9B;font:11px/1.35 monospace;background:rgba(0,0,0,.6);padding:6px;pointer-events:none;max-width:95vw;white-space:pre-wrap";
+  document.body.appendChild(pre);
+  const tick = () => {
+    const v = stage.view, m = stage.metrics, f = stage.camera.userData.framing; if (!v || !m || !f) return;
+    pre.textContent = "view " + v.w + "x" + v.h + " dpr " + (window.devicePixelRatio || 1) + " insets " + v.top + "/" + v.bottom +
+      "\nregion H " + m.regionH.toFixed(2) + " W " + m.regionW.toFixed(2) + " cY " + m.centerY.toFixed(2) +
+      "\ncam dist " + f.d.toFixed(2) + " y " + f.targetY.toFixed(2) +
+      "\nfigure " + Math.round(100 * f.regionPx / v.h) + "%H " + Math.round(100 * f.regionWpx / v.w) + "%W" +
+      "\nvrm v" + (vrm.meta && vrm.meta.metaVersion) + " front " + animator.front + " sL " + animator.sL + " sR " + animator.sR +
+      "\nexpr " + Object.keys(animator.has).join(",");
+  };
+  tick(); dbgTimer = setInterval(tick, 500);
 }
 
 function onResize() { cancelAnimationFrame(resizeRaf); resizeRaf = requestAnimationFrame(() => stage && stage.resize()); }
@@ -536,6 +566,7 @@ function cleanup() {
   if (voice) voice.stopAll();
   if (animator) animator.dispose();
   if (stage) { disposeAvatar(stage, vrm); stage.dispose(); }
+  clearInterval(dbgTimer);
   if (ro) ro.disconnect();
   window.removeEventListener("resize", onResize);
 }
