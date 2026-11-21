@@ -184,7 +184,9 @@ function measure(vrm) {
     const span = l && r ? Math.abs(l.x - r.x) : (head.y - hips.y) * 0.65;
     let maxY = NaN;
     try { maxY = new THREE.Box3().setFromObject(root).max.y; } catch (e) {}
-    return regionFromBones(hips.y, head.y, span, maxY);
+    const lh = wp("leftHand"), rh = wp("rightHand");
+    const handY = lh && rh ? Math.min(lh.y, rh.y) : NaN;
+    return regionFromBones(hips.y, head.y, span, maxY, handY);
   }
   // Fallback: bounding box
   let box = new THREE.Box3().setFromObject(root);
@@ -196,12 +198,13 @@ function measure(vrm) {
 }
 
 // Head-to-waist region from the head and hips bones.
-function regionFromBones(hipsY, headY, span, maxY) {
+function regionFromBones(hipsY, headY, span, maxY, handY) {
   const up = headY - hipsY;
   // Head top: real mesh top (hair, goggles, bun) when sane, else a proportional estimate.
   let top = headY + up * 0.5;
   if (Number.isFinite(maxY)) top = Math.min(Math.max(maxY + up * 0.02, headY + up * 0.3), headY + up * 0.9);
-  const bottom = hipsY + up * 0.08; // just below the belt line = waist
+  let bottom = hipsY + up * 0.08; // just below the belt line = waist
+  if (Number.isFinite(handY)) bottom = Math.min(bottom, handY - up * 0.22); // keep the hands fully in frame
   return { regionH: top - bottom, regionW: span + up * 0.62, centerY: (top + bottom) / 2 };
 }
 
