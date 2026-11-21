@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <title>AI Virtual Assistant</title>
 
@@ -19,8 +19,12 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #020916;
+    background: #020817;
     font-family: Arial, sans-serif;
+}
+
+body {
+    position: relative;
 }
 
 /* BACKGROUND */
@@ -28,137 +32,121 @@ html, body {
 #background {
     position: fixed;
     inset: 0;
+    z-index: 0;
 
     background:
         linear-gradient(
-            rgba(1, 8, 25, 0.25),
-            rgba(1, 8, 25, 0.45)
+            rgba(0, 5, 20, 0.15),
+            rgba(0, 5, 20, 0.35)
         ),
         url("./assets/background/command-center.jpg");
 
     background-size: cover;
-    background-position: center;
-    z-index: 0;
+    background-position: center center;
 }
 
-/* DARK OVERLAY */
+/* DARK CINEMATIC OVERLAY */
 
 #overlay {
     position: fixed;
     inset: 0;
+    z-index: 1;
 
     background:
         radial-gradient(
-            circle at center,
-            transparent 20%,
-            rgba(0, 5, 18, 0.5) 100%
+            ellipse at center,
+            transparent 30%,
+            rgba(0, 5, 20, 0.35) 100%
         );
 
-    z-index: 1;
     pointer-events: none;
 }
 
-/* HOLOGRAM LIGHT */
+/* HOLOGRAPHIC LIGHT */
 
-.hologram {
+.light {
     position: fixed;
-
-    width: 300px;
-    height: 300px;
-
+    width: 280px;
+    height: 280px;
     border-radius: 50%;
 
-    border: 1px solid rgba(0, 200, 255, 0.15);
+    filter: blur(90px);
 
-    box-shadow:
-        0 0 30px rgba(0, 180, 255, 0.08),
-        inset 0 0 40px rgba(0, 180, 255, 0.05);
-
-    animation: hologramPulse 5s infinite alternate;
-
-    z-index: 2;
     pointer-events: none;
+    z-index: 2;
+
+    opacity: 0.35;
+
+    animation: lightMove 6s ease-in-out infinite alternate;
 }
 
-.hologram.left {
-    left: -180px;
+.light1 {
+    background: #008cff;
+    left: -120px;
     top: 25%;
 }
 
-.hologram.right {
-    right: -180px;
-    top: 25%;
+.light2 {
+    background: #00eaff;
+    right: -120px;
+    top: 45%;
+    animation-delay: 2s;
 }
 
-@keyframes hologramPulse {
-
+@keyframes lightMove {
     from {
-        opacity: 0.25;
-        transform: scale(0.9);
+        transform: scale(0.8);
+        opacity: 0.2;
     }
 
     to {
-        opacity: 0.7;
-        transform: scale(1.1);
+        transform: scale(1.2);
+        opacity: 0.5;
     }
-
 }
 
-/* AVATAR */
+/* AVATAR CANVAS */
 
 #avatarContainer {
-
     position: fixed;
-
-    left: 50%;
-    bottom: 0;
-
-    transform: translateX(-50%);
-
-    width: 100%;
-    height: 100%;
-
+    inset: 0;
     z-index: 5;
-
     pointer-events: none;
 }
 
-canvas {
-    display: block;
+#avatarContainer canvas {
     width: 100%;
     height: 100%;
+    display: block;
 }
 
-/* VOICE VISUALIZER */
+/* SPEAKING LIGHT */
 
 #voiceGlow {
-
     position: fixed;
 
-    width: 260px;
-    height: 260px;
+    width: 300px;
+    height: 200px;
 
     left: 50%;
-    bottom: -150px;
+    bottom: -120px;
 
     transform: translateX(-50%);
 
-    border-radius: 50%;
+    background: #00bfff;
 
-    background: rgba(0, 180, 255, 0.2);
-
-    filter: blur(70px);
+    filter: blur(90px);
 
     opacity: 0;
 
     transition: opacity 0.4s;
 
     z-index: 3;
-
+    pointer-events: none;
 }
 
 body.speaking #voiceGlow {
-    opacity: 1;
+    opacity: 0.65;
 }
 
 /* RESPONSIVE */
@@ -166,20 +154,7 @@ body.speaking #voiceGlow {
 @media (max-width: 600px) {
 
     #background {
-        background-position: center;
-    }
-
-    .hologram {
-        width: 180px;
-        height: 180px;
-    }
-
-}
-
-@media (min-width: 900px) {
-
-    #avatarContainer {
-        width: 65%;
+        background-position: center center;
     }
 
 }
@@ -191,14 +166,12 @@ body.speaking #voiceGlow {
 <body>
 
 <div id="background"></div>
-
 <div id="overlay"></div>
 
-<div class="hologram left"></div>
-<div class="hologram right"></div>
+<div class="light light1"></div>
+<div class="light light2"></div>
 
 <div id="avatarContainer"></div>
-
 <div id="voiceGlow"></div>
 
 
@@ -206,16 +179,11 @@ body.speaking #voiceGlow {
 
 {
     "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
 
-        "three":
-        "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
 
-        "three/addons/":
-        "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-
-        "@pixiv/three-vrm":
-        "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js"
-
+        "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.js"
     }
 }
 
@@ -228,7 +196,10 @@ import * as THREE from "three";
 
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+import {
+    VRMLoaderPlugin,
+    VRMUtils
+} from "@pixiv/three-vrm";
 
 
 /* =====================================
@@ -241,13 +212,9 @@ const MODEL_PATH =
 const API_URL =
 "https://aryan-ai-backend-v2.vercel.app/api/chat";
 
-const CHARACTER = "AIRA";
-
-const LANGUAGE = "en-IN";
-
 
 /* =====================================
-   THREE JS SETUP
+   SCENE
 ===================================== */
 
 const container =
@@ -256,32 +223,28 @@ document.getElementById("avatarContainer");
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
-35,
+28,
 window.innerWidth / window.innerHeight,
-0.1,
+0.01,
 100
 );
-
-camera.position.set(0, 1.35, 2.8);
 
 
 const renderer = new THREE.WebGLRenderer({
 
     alpha: true,
-
     antialias: true,
-
     powerPreference: "high-performance"
 
 });
 
 renderer.setPixelRatio(
-Math.min(window.devicePixelRatio, 1.7)
+    Math.min(window.devicePixelRatio, 1.5)
 );
 
 renderer.setSize(
-window.innerWidth,
-window.innerHeight
+    window.innerWidth,
+    window.innerHeight
 );
 
 renderer.outputColorSpace =
@@ -290,7 +253,7 @@ THREE.SRGBColorSpace;
 renderer.toneMapping =
 THREE.ACESFilmicToneMapping;
 
-renderer.toneMappingExposure = 1.15;
+renderer.toneMappingExposure = 1.2;
 
 container.appendChild(renderer.domElement);
 
@@ -299,66 +262,141 @@ container.appendChild(renderer.domElement);
    LIGHTING
 ===================================== */
 
-const ambientLight = new THREE.AmbientLight(
-0xffffff,
-1.5
+scene.add(
+    new THREE.AmbientLight(0xffffff, 1.7)
 );
 
-scene.add(ambientLight);
 
-
-const frontLight = new THREE.DirectionalLight(
-0xffffff,
-2.5
-);
+const frontLight =
+new THREE.DirectionalLight(0xffffff, 2.5);
 
 frontLight.position.set(0, 3, 5);
 
 scene.add(frontLight);
 
 
-const blueLight = new THREE.PointLight(
-0x00bfff,
-30,
-10
-);
+const blueLight =
+new THREE.PointLight(0x00bfff, 35, 10);
 
 blueLight.position.set(-2, 2, 2);
 
 scene.add(blueLight);
 
 
-const purpleLight = new THREE.PointLight(
-0x6b4cff,
-20,
-10
-);
+const purpleLight =
+new THREE.PointLight(0x5555ff, 20, 10);
 
-purpleLight.position.set(2, 1, -2);
+purpleLight.position.set(2, 2, -2);
 
 scene.add(purpleLight);
 
 
 /* =====================================
-   VRM MODEL
+   VRM VARIABLES
 ===================================== */
 
 let currentVRM = null;
 
 let headBone = null;
-
 let neckBone = null;
 
-let chestBone = null;
-
 let leftArm = null;
-
 let rightArm = null;
 
 let expressionManager = null;
 
 let modelReady = false;
 
+let modelHeight = 1;
+
+
+/* =====================================
+   CAMERA AUTO FRAMING
+===================================== */
+
+function frameAvatar(vrm) {
+
+    const model = vrm.scene;
+
+    model.updateMatrixWorld(true);
+
+    const box = new THREE.Box3()
+        .setFromObject(model);
+
+    const size = new THREE.Vector3();
+
+    const center = new THREE.Vector3();
+
+    box.getSize(size);
+
+    box.getCenter(center);
+
+    if (
+        !Number.isFinite(size.y) ||
+        size.y <= 0.001
+    ) {
+
+        console.error("Invalid VRM model dimensions");
+
+        return;
+
+    }
+
+    modelHeight = size.y;
+
+    // Move model to centre horizontally
+
+    model.position.x -= center.x;
+
+    model.position.z -= center.z;
+
+    // Put model feet at zero
+
+    model.position.y -= box.min.y;
+
+    model.updateMatrixWorld(true);
+
+    /*
+       Half-body framing.
+
+       Camera target is positioned
+       around upper torso.
+
+       This keeps face and waist visible.
+    */
+
+    const targetY = modelHeight * 0.72;
+
+    const distance = modelHeight * 1.40;
+
+    camera.position.set(
+        0,
+        targetY,
+        distance
+    );
+
+    camera.lookAt(
+        0,
+        targetY,
+        0
+    );
+
+    camera.near = 0.01;
+
+    camera.far = modelHeight * 20;
+
+    camera.updateProjectionMatrix();
+
+    console.log("VRM Height:", modelHeight);
+
+    console.log("Camera framed successfully");
+
+}
+
+
+/* =====================================
+   LOAD VRM
+===================================== */
 
 const loader = new GLTFLoader();
 
@@ -371,111 +409,118 @@ loader.register((parser) => {
 
 loader.load(
 
-MODEL_PATH,
+    MODEL_PATH,
 
-(gltf) => {
+    (gltf) => {
 
-    const vrm = gltf.userData.vrm;
+        const vrm = gltf.userData.vrm;
 
-    currentVRM = vrm;
+        if (!vrm) {
 
-    VRMUtils.removeUnnecessaryVertices(
-        gltf.scene
-    );
+            console.error("VRM data missing");
 
-    VRMUtils.removeUnnecessaryJoints(
-        gltf.scene
-    );
+            return;
 
-    scene.add(vrm.scene);
+        }
 
+        currentVRM = vrm;
 
-    /* HUMANOID BONES */
+        VRMUtils.removeUnnecessaryVertices(
+            gltf.scene
+        );
 
-    const humanoid = vrm.humanoid;
+        VRMUtils.removeUnnecessaryJoints(
+            gltf.scene
+        );
 
-    headBone = humanoid.getNormalizedBoneNode(
-        "head"
-    );
+        scene.add(vrm.scene);
 
-    neckBone = humanoid.getNormalizedBoneNode(
-        "neck"
-    );
+        /*
+           Keep the model facing camera.
+           If your model faces backwards,
+           change Math.PI to 0.
+        */
 
-    chestBone = humanoid.getNormalizedBoneNode(
-        "chest"
-    );
+        vrm.scene.rotation.y = Math.PI;
 
-    leftArm = humanoid.getNormalizedBoneNode(
-        "leftUpperArm"
-    );
+        // AUTO CAMERA FRAMING
 
-    rightArm = humanoid.getNormalizedBoneNode(
-        "rightUpperArm"
-    );
+        frameAvatar(vrm);
 
 
-    expressionManager =
-    vrm.expressionManager;
+        // HUMANOID BONES
+
+        const humanoid = vrm.humanoid;
+
+        headBone =
+        humanoid.getNormalizedBoneNode("head");
+
+        neckBone =
+        humanoid.getNormalizedBoneNode("neck");
+
+        leftArm =
+        humanoid.getNormalizedBoneNode("leftUpperArm");
+
+        rightArm =
+        humanoid.getNormalizedBoneNode("rightUpperArm");
+
+        expressionManager =
+        vrm.expressionManager;
 
 
-    /* MODEL POSITION */
+        modelReady = true;
 
-    vrm.scene.position.set(
-        0,
-        -1.0,
-        0
-    );
+        console.log("AIRA VRM Loaded Successfully");
 
-    vrm.scene.rotation.y = Math.PI;
+    },
 
+    (progress) => {
 
-    modelReady = true;
+        if (progress.total > 0) {
 
-    console.log("VRM Loaded Successfully");
+            console.log(
+                "Loading:",
+                Math.round(
+                    progress.loaded / progress.total * 100
+                ) + "%"
+            );
 
+        }
 
-    /* CAMERA HALF BODY */
+    },
 
-    camera.position.set(
-        0,
-        1.35,
-        2.8
-    );
+    (error) => {
 
-},
+        console.error(
+            "VRM Loading Failed:",
+            error
+        );
 
-undefined,
-
-(error) => {
-
-    console.error("VRM Loading Error:", error);
-
-}
+    }
 
 );
 
 
 /* =====================================
-   NATURAL ANIMATION
+   ANIMATION
 ===================================== */
 
 const clock = new THREE.Clock();
 
-let talking = false;
+let animationTime = 0;
+
+let blinkTimer = 0;
 
 let blinkValue = 0;
 
 let nextBlink = 3;
 
-let blinkTimer = 0;
-
-let animationTime = 0;
+let talking = false;
 
 
-function animateAvatar() {
+function animate() {
 
-    requestAnimationFrame(animateAvatar);
+    requestAnimationFrame(animate);
 
     const delta = Math.min(
         clock.getDelta(),
@@ -487,60 +532,58 @@ function animateAvatar() {
 
     if (currentVRM && modelReady) {
 
-        /* BREATHING */
+        // BREATHING
 
-        const breathing =
-        Math.sin(animationTime * 1.5) * 0.008;
-
-        currentVRM.scene.position.y =
-        -1.0 + breathing;
+        currentVRM.scene.position.y +=
+            Math.sin(animationTime * 1.5) * 0.0008;
 
 
-        /* HEAD MOVEMENT */
+        // NATURAL HEAD MOVEMENT
 
         if (headBone) {
 
             headBone.rotation.y =
-            Math.sin(animationTime * 0.5) * 0.035;
+                Math.sin(animationTime * 0.5) * 0.035;
 
             headBone.rotation.x =
-            Math.sin(animationTime * 0.8) * 0.018;
+                Math.sin(animationTime * 0.7) * 0.015;
 
         }
 
 
-        /* NECK MOVEMENT */
+        // NECK
 
         if (neckBone) {
 
             neckBone.rotation.x =
-            Math.sin(animationTime * 0.7) * 0.01;
+                Math.sin(animationTime * 0.6) * 0.01;
 
         }
 
 
-        /* BLINKING */
+        // BLINKING
 
         blinkTimer += delta;
 
-        if (blinkTimer > nextBlink) {
+        if (blinkTimer >= nextBlink) {
 
             blinkValue = 1;
 
-            nextBlink =
-            0.12 + Math.random() * 0.08;
+            blinkTimer = 0;
 
-            blinkTimer = -0.15;
+            nextBlink =
+                2 + Math.random() * 3;
 
         }
 
         if (blinkValue > 0) {
 
-            blinkValue -= delta * 7;
+            blinkValue -= delta * 8;
 
-            if (blinkValue < 0) {
-                blinkValue = 0;
-            }
+            blinkValue = Math.max(
+                0,
+                blinkValue
+            );
 
         }
 
@@ -552,44 +595,46 @@ function animateAvatar() {
                 blinkValue
             );
 
+
+            // TALKING
+
+            if (talking) {
+
+                const mouth =
+                    0.15 +
+                    Math.abs(
+                        Math.sin(animationTime * 12)
+                    ) * 0.45;
+
+                expressionManager.setValue(
+                    "aa",
+                    mouth
+                );
+
+            } else {
+
+                expressionManager.setValue(
+                    "aa",
+                    0
+                );
+
+            }
+
         }
 
 
-        /* SPEAKING MOUTH ANIMATION */
-
-        if (talking && expressionManager) {
-
-            const mouth =
-            0.2 +
-            Math.abs(Math.sin(animationTime * 13)) * 0.45;
-
-            expressionManager.setValue(
-                "aa",
-                mouth
-            );
-
-        } else if (expressionManager) {
-
-            expressionManager.setValue(
-                "aa",
-                0
-            );
-
-        }
-
-
-        /* AUTOMATIC HAND GESTURE */
+        // SUBTLE ARM MOVEMENT
 
         if (leftArm && rightArm) {
 
-            const gesture =
-            talking ? 0.08 : 0.015;
+            const movement =
+                talking ? 0.035 : 0.008;
 
             leftArm.rotation.z =
-            0.12 + Math.sin(animationTime * 1.4) * gesture;
+                movement * Math.sin(animationTime * 1.5);
 
             rightArm.rotation.z =
-            -0.12 - Math.sin(animationTime * 1.4) * gesture;
+                -movement * Math.sin(animationTime * 1.5);
 
         }
 
@@ -602,19 +647,17 @@ function animateAvatar() {
 
 }
 
-animateAvatar();
+animate();
 
 
 /* =====================================
    RESIZE
 ===================================== */
 
-window.addEventListener(
-"resize",
-() => {
+function resize() {
 
     camera.aspect =
-    window.innerWidth / window.innerHeight;
+        window.innerWidth / window.innerHeight;
 
     camera.updateProjectionMatrix();
 
@@ -624,14 +667,24 @@ window.addEventListener(
     );
 
     renderer.setPixelRatio(
-        Math.min(window.devicePixelRatio, 1.7)
+        Math.min(window.devicePixelRatio, 1.5)
     );
 
-});
+    // Recalculate framing after orientation change
+
+    if (currentVRM) {
+
+        frameAvatar(currentVRM);
+
+    }
+
+}
+
+window.addEventListener("resize", resize);
 
 
 /* =====================================
-   AI CHAT BACKEND
+   AI BACKEND
 ===================================== */
 
 let conversation = [];
@@ -656,9 +709,9 @@ async function sendToAI(message) {
 
                 messages: conversation,
 
-                character: CHARACTER,
+                character: "assistant",
 
-                language: LANGUAGE
+                language: "hinglish"
 
             })
 
@@ -668,7 +721,7 @@ async function sendToAI(message) {
         if (!response.ok) {
 
             throw new Error(
-                "Backend Error: " + response.status
+                "API Error: " + response.status
             );
 
         }
@@ -678,9 +731,7 @@ async function sendToAI(message) {
 
         if (!data.success || !data.reply) {
 
-            throw new Error(
-                "Invalid AI response"
-            );
+            throw new Error("Invalid AI response");
 
         }
 
@@ -705,12 +756,12 @@ async function sendToAI(message) {
         if (conversation.length > 20) {
 
             conversation =
-            conversation.slice(-20);
+                conversation.slice(-20);
 
         }
 
 
-        speakResponse(data.reply);
+        speak(data.reply);
 
     }
 
@@ -718,8 +769,8 @@ async function sendToAI(message) {
 
         console.error("AI Error:", error);
 
-        speakResponse(
-            "Sorry, I am having trouble connecting. Please try again."
+        speak(
+            "Sorry, connection mein problem aa rahi hai."
         );
 
     }
@@ -731,18 +782,18 @@ async function sendToAI(message) {
    TEXT TO SPEECH
 ===================================== */
 
-function speakResponse(text) {
+function speak(text) {
 
-    if (!("speechSynthesis" in window)) {
+    if (!window.speechSynthesis) {
         return;
     }
 
     speechSynthesis.cancel();
 
     const utterance =
-    new SpeechSynthesisUtterance(text);
+        new SpeechSynthesisUtterance(text);
 
-    utterance.lang = LANGUAGE;
+    utterance.lang = "hi-IN";
 
     utterance.rate = 1;
 
@@ -755,9 +806,15 @@ function speakResponse(text) {
 
         talking = true;
 
-        document.body.classList.add(
-            "speaking"
-        );
+        document.body.classList.add("speaking");
+
+        if (recognition) {
+
+            try {
+                recognition.stop();
+            } catch(e) {}
+
+        }
 
     };
 
@@ -766,8 +823,11 @@ function speakResponse(text) {
 
         talking = false;
 
-        document.body.classList.remove(
-            "speaking"
+        document.body.classList.remove("speaking");
+
+        setTimeout(
+            startListening,
+            700
         );
 
     };
@@ -777,8 +837,11 @@ function speakResponse(text) {
 
         talking = false;
 
-        document.body.classList.remove(
-            "speaking"
+        document.body.classList.remove("speaking");
+
+        setTimeout(
+            startListening,
+            1000
         );
 
     };
@@ -794,21 +857,19 @@ function speakResponse(text) {
 ===================================== */
 
 const SpeechRecognition =
-window.SpeechRecognition ||
-window.webkitSpeechRecognition;
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
 let recognition = null;
 
 let recognitionActive = false;
-
-let restartTimer = null;
 
 
 if (SpeechRecognition) {
 
     recognition = new SpeechRecognition();
 
-    recognition.lang = LANGUAGE;
+    recognition.lang = "hi-IN";
 
     recognition.continuous = true;
 
@@ -819,7 +880,7 @@ if (SpeechRecognition) {
 
         recognitionActive = true;
 
-        console.log("Microphone Listening");
+        console.log("Listening...");
 
     };
 
@@ -827,24 +888,20 @@ if (SpeechRecognition) {
     recognition.onresult = (event) => {
 
         const result =
-        event.results[event.results.length - 1];
+            event.results[event.results.length - 1];
 
         if (!result.isFinal) {
             return;
         }
 
         const message =
-        result[0].transcript.trim();
+            result[0].transcript.trim();
 
         if (!message) {
             return;
         }
 
         console.log("User:", message);
-
-        speechSynthesis.cancel();
-
-        talking = false;
 
         sendToAI(message);
 
@@ -854,7 +911,7 @@ if (SpeechRecognition) {
     recognition.onerror = (event) => {
 
         console.log(
-            "Speech Recognition Error:",
+            "Microphone:",
             event.error
         );
 
@@ -865,12 +922,14 @@ if (SpeechRecognition) {
 
         recognitionActive = false;
 
-        clearTimeout(restartTimer);
+        if (!talking) {
 
-        restartTimer = setTimeout(
-            startListening,
-            1000
-        );
+            setTimeout(
+                startListening,
+                1000
+            );
+
+        }
 
     };
 
@@ -878,7 +937,7 @@ if (SpeechRecognition) {
 
 
 /* =====================================
-   AUTOMATIC MICROPHONE
+   START LISTENING
 ===================================== */
 
 async function startListening() {
@@ -886,14 +945,14 @@ async function startListening() {
     if (!recognition) {
 
         console.error(
-            "Speech Recognition is not supported in this browser."
+            "Speech recognition unsupported"
         );
 
         return;
 
     }
 
-    if (recognitionActive) {
+    if (recognitionActive || talking) {
         return;
     }
 
@@ -910,7 +969,7 @@ async function startListening() {
     catch(error) {
 
         console.error(
-            "Microphone Permission Error:",
+            "Microphone Permission:",
             error
         );
 
@@ -920,20 +979,20 @@ async function startListening() {
 
 
 /* =====================================
-   AUTOMATIC START
+   START
 ===================================== */
 
 window.addEventListener(
-"load",
-() => {
+    "load",
+    () => {
 
-    setTimeout(() => {
+        setTimeout(
+            startListening,
+            1500
+        );
 
-        startListening();
-
-    }, 1500);
-
-});
+    }
+);
 
 
 /* =====================================
@@ -941,20 +1000,19 @@ window.addEventListener(
 ===================================== */
 
 window.addEventListener(
-"beforeunload",
-() => {
+    "beforeunload",
+    () => {
 
-    clearTimeout(restartTimer);
+        if (recognition) {
 
-    if (recognition) {
+            recognition.stop();
 
-        recognition.stop();
+        }
+
+        speechSynthesis.cancel();
 
     }
-
-    speechSynthesis.cancel();
-
-});
+);
 
 </script>
 
