@@ -10,7 +10,7 @@
 <style>
 :root{--cyan:#00eaff;--blue:#008cff;--deep:#020817}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);font-family:system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--deep);font-family:system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
 #background{position:fixed;inset:0;z-index:0;background:linear-gradient(rgba(0,5,20,.15),rgba(0,5,20,.35)),url("./assets/background/command-center.jpg") center/cover no-repeat}
 #overlay{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,5,20,.45) 100%)}
 #floor{position:fixed;left:-25%;right:-25%;bottom:0;height:34%;z-index:1;pointer-events:none;
@@ -25,12 +25,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);font-fam
 .p3{width:min(16vw,160px);height:min(10vw,100px);left:8%;top:52%;animation-delay:3s}
 @keyframes float{to{transform:translateY(-14px);opacity:.6}}
 @media(max-width:700px){.panel{opacity:.35}.p3{display:none}}
+@media(orientation:portrait){.p1{left:3%;top:5%;width:26vw;height:16vw}.p2{right:3%;top:8%;width:20vw;height:28vw}#background{background-position:50% 40%}}
 .light{position:fixed;width:280px;height:280px;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:2;opacity:.35;animation:lm 6s ease-in-out infinite alternate}
 .light1{background:var(--blue);left:-120px;top:25%}
 .light2{background:var(--cyan);right:-120px;top:45%;animation-delay:2s}
 @keyframes lm{from{transform:scale(.8);opacity:.2}to{transform:scale(1.2);opacity:.5}}
-#avatarContainer{position:fixed;inset:0;z-index:5;pointer-events:none}
-#avatarContainer canvas{width:100%;height:100%;display:block}
+#avatarContainer{position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;z-index:5;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+#avatarContainer canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #voiceGlow{position:fixed;width:300px;height:200px;left:50%;bottom:-120px;transform:translateX(-50%);background:var(--cyan);filter:blur(90px);opacity:0;transition:opacity .4s;z-index:3;pointer-events:none}
 body.speaking #voiceGlow{opacity:.55}
 #gate{position:fixed;inset:0;z-index:20;border:0;background:rgba(2,8,23,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
@@ -98,6 +99,13 @@ export async function askAI(message) {
 
 const MODEL_PATH = "./assets/models/lady_avatar_v3.vrm";
 
+const PIXEL_BUDGET = 2.6e6; // max rendered pixels, keeps mobile GPUs smooth
+
+function readInsets(el) {
+  const cs = getComputedStyle(el);
+  return { top: parseFloat(cs.paddingTop) || 0, bottom: parseFloat(cs.paddingBottom) || 0 };
+}
+
 function createStage(container) {
   const canvas = document.createElement("canvas");
   let renderer;
@@ -118,18 +126,26 @@ function createStage(container) {
   const rim = new THREE.DirectionalLight(0x00cfff, 1.6); rim.position.set(-3, 2, -2); scene.add(rim);
   const fill = new THREE.DirectionalLight(0x4466ff, 0.8); fill.position.set(3, 1, 1); scene.add(fill);
 
-  const stage = { renderer, scene, camera, metrics: null,
-    resize() {
-      const w = window.innerWidth, h = window.innerHeight;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, w < 700 ? 1.5 : 2));
+  let last = "";
+  const stage = { renderer, scene, camera, metrics: null, view: null,
+    // Recomputes size, pixel ratio and framing only when something actually changed.
+    resize(force) {
+      const w = Math.max(1, Math.round(container.clientWidth || window.innerWidth));
+      const h = Math.max(1, Math.round(container.clientHeight || window.innerHeight));
+      const dpr = window.devicePixelRatio || 1, ins = readInsets(container);
+      const sig = [w, h, dpr, ins.top, ins.bottom].join("|");
+      if (!force && sig === last) return;
+      last = sig;
+      renderer.setPixelRatio(Math.max(1, Math.min(dpr, 2, Math.sqrt(PIXEL_BUDGET / (w * h)))));
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      if (stage.metrics) fitCamera(camera, stage.metrics);
+      stage.view = { w, h, top: ins.top, bottom: ins.bottom };
+      if (stage.metrics) applyFraming(camera, stage.metrics, stage.view);
       else camera.updateProjectionMatrix();
     },
     dispose() { renderer.dispose(); canvas.remove(); }
   };
-  stage.resize();
+  stage.resize(true);
   return stage;
 }
 
@@ -147,7 +163,7 @@ function loadAvatar(stage, onProgress) {
         vrm.scene.traverse((o) => { o.frustumCulled = false; });
         stage.scene.add(vrm.scene);
         stage.metrics = measure(vrm);
-        fitCamera(stage.camera, stage.metrics);
+        applyFraming(stage.camera, stage.metrics, stage.view);
         resolve(vrm);
       } catch (e) { reject(e); }
     }, (p) => onProgress && p.total && onProgress(p.loaded / p.total),
@@ -174,17 +190,38 @@ function measure(vrm) {
   const hipsY = hips ? hips.y : H * 0.55;
   const l = wp("leftUpperArm"), r = wp("rightUpperArm");
   const span = l && r ? Math.abs(l.x - r.x) : H * 0.22;
-  const top = box.max.y + H * 0.02, bottom = hipsY - H * 0.02;
-  return { regionH: top - bottom, regionW: span * 1.7, centerY: (top + bottom) / 2 };
+  return regionFromRig(H, box.max.y, hipsY, span);
 }
 
-// Distance is solved from both vertical and horizontal fit, so it adapts to any aspect ratio.
-function fitCamera(camera, m) {
-  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  const d = Math.max((m.regionH / 2) / t, (m.regionW / 2) / (t * camera.aspect)) * 1.06;
-  camera.position.set(0, m.centerY, d);
-  camera.lookAt(0, m.centerY, 0);
-  camera.near = d / 50; camera.far = d * 20;
+// Head-to-waist region. Width = shoulder span + room for the arms hanging at the sides.
+function regionFromRig(H, maxY, hipsY, span) {
+  const top = maxY + H * 0.02, bottom = hipsY - H * 0.02;
+  return { regionH: top - bottom, regionW: span + H * 0.16, centerY: (top + bottom) / 2 };
+}
+
+// Pure framing maths (no THREE) so it can be tested at any viewport.
+// Fits the head-to-waist region inside the safe area for both width and height,
+// then biases the composition upward when there is spare vertical room (tall portrait screens).
+function computeFraming(m, fovDeg, w, h, top, bottom) {
+  const t = Math.tan(fovDeg * Math.PI / 360);
+  const aspect = w / h;
+  const uh = Math.max(h - top - bottom, h * 0.5);
+  const margin = aspect >= 1 ? 1.14 : 1.04;
+  const dV = (m.regionH * margin / 2) / t * (h / uh);
+  const dH = (m.regionW * margin / 2) / (t * aspect);
+  const d = Math.max(dV, dH);
+  const wpp = (2 * d * t) / h;                 // world units per screen pixel
+  const regionPx = m.regionH / wpp;
+  const slack = Math.max(uh - regionPx, 0);
+  const yc = top + regionPx / 2 + slack * 0.22; // region centre, px from top
+  return { d, targetY: m.centerY + (yc - h / 2) * wpp, regionPx, regionWpx: m.regionW / wpp, yc };
+}
+
+function applyFraming(camera, m, v) {
+  const r = computeFraming(m, camera.fov, v.w, v.h, v.top, v.bottom);
+  camera.position.set(0, r.targetY, r.d);
+  camera.lookAt(0, r.targetY, 0);
+  camera.near = r.d / 50; camera.far = r.d * 20;
   camera.updateProjectionMatrix();
 }
 
@@ -338,7 +375,7 @@ class Animator {
     this.q = this.rest(); this.p = this.rest();
     this.gestureAt = 1; this.gestureOn = false; this.mouth = 0;
   }
-  rest() { return { luz: -1.1, ruz: 1.1, lux: 0, rux: 0, lly: -0.14, rly: 0.14, hand: 0 }; }
+  rest() { return { luz: -1.25, ruz: 1.25, lux: 0, rux: 0, lly: -0.14, rly: 0.14, hand: 0 }; }
 
   newGesture() {
     const q = this.rest(), right = Math.random() < 0.65, sg = right ? 1 : -1, c = right ? "r" : "l";
@@ -421,7 +458,7 @@ let toastTimer;
 function toast(msg, ms = 4500) { toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("show"), ms); }
 function showGate(msg) { gateText.textContent = msg; gate.hidden = false; }
 
-let stage, vrm, animator, voice, raf = 0, last = 0, busy = false, resizeRaf = 0;
+let stage, vrm, animator, voice, raf = 0, last = 0, busy = false, resizeRaf = 0, ro = null;
 const FALLBACK = "Sorry, connection mein problem aa rahi hai.";
 
 async function init() {
@@ -442,8 +479,12 @@ async function init() {
   });
   if (!supported.recognition) toast("This browser has no speech recognition. Use Chrome, Edge or Safari.", 9000);
 
+  const container = document.getElementById("avatarContainer");
+  if (window.ResizeObserver) { ro = new ResizeObserver(onResize); ro.observe(container); }
   window.addEventListener("resize", onResize);
-  window.addEventListener("orientationchange", () => setTimeout(onResize, 250));
+  window.addEventListener("orientationchange", () => { onResize(); setTimeout(onResize, 300); });
+  document.addEventListener("fullscreenchange", () => setTimeout(onResize, 100));
+  document.addEventListener("webkitfullscreenchange", () => setTimeout(onResize, 100));
   if (window.visualViewport) window.visualViewport.addEventListener("resize", onResize);
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", cleanup);
@@ -495,6 +536,7 @@ function cleanup() {
   if (voice) voice.stopAll();
   if (animator) animator.dispose();
   if (stage) { disposeAvatar(stage, vrm); stage.dispose(); }
+  if (ro) ro.disconnect();
   window.removeEventListener("resize", onResize);
 }
 
